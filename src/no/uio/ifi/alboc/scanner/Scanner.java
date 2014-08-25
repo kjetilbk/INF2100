@@ -23,7 +23,7 @@ public class Scanner {
 	}
 
 	public static void finish() {
-		// Kjetil er dummestest
+		// Kjetil er dummere
 		// -- Must be changed in part 0:
 	}
 
