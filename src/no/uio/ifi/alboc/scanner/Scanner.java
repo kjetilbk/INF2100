@@ -50,6 +50,7 @@ public class Scanner {
 	}
 
 	private static boolean isLetterAZ(char c) {
+		System.out.println("fjern dette a, vetle");
 		return (c <= 'a' && c >= 'z' ) || (c <= 'A' && c >= 'Z');
 	}
 
