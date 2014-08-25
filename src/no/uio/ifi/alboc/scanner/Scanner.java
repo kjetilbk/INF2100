@@ -49,8 +49,7 @@ public class Scanner {
 	}
 
 	private static boolean isLetterAZ(char c) {
-		// -- Must be changed in part 0:
-		return false;
+		return (c <= 'a' && c >= 'z' ) || (c <= 'A' && c >= 'Z');
 	}
 
 	public static void check(Token t) {
