@@ -36,21 +36,37 @@ public class Scanner {
 		nextToken = null;
 		while (nextToken == null) {
 			nextLine = CharGenerator.curLineNum();
-
+			CharGenerator.readNext();
 			if (!CharGenerator.isMoreToRead()) {
 				nextToken = eofToken;
 			} else
 			// -- Must be changed in part 0:
 			{
-				Error.error(nextLine, "Illegal symbol: '" + CharGenerator.curC
-						+ "'!");
+				Token token = Token.checkSingleCharToken(CharGenerator.curC);
+				if(token == null) token = Token.checkDoubleCharToken(CharGenerator.curC, CharGenerator.nextC);
+				if(token == Token.startCommentToken) {
+					CharGenerator.readNext();
+					boolean brk = false;
+					while(brk == false) {
+						CharGenerator.readNext();
+						if(CharGenerator.curC == '*' && CharGenerator.nextC == '/') {
+							CharGenerator.readNext();
+							CharGenerator.readNext();
+							brk = true;
+						}
+					}
+				}
+				else if(token == null)
+					Error.error(nextLine, "Illegal symbol: '" + CharGenerator.curC
+							+ "'!");
 			}
+
 		}
 		Log.noteToken();
 	}
 
 	private static boolean isLetterAZ(char c) {
-		return (c <= 'a' && c >= 'z' ) || (c <= 'A' && c >= 'Z');
+		return (c <= 'a' && c >= 'z') || (c <= 'A' && c >= 'Z');
 	}
 
 	public static void check(Token t) {

@@ -112,6 +112,7 @@ public class AlboC {
 			} catch (AlboCError e) {
 				System.out.println();
 				System.err.println(e.getMessage());
+				e.printStackTrace();
 				exitStatus = 1;
 			} finally {
 				Syntax.finish();

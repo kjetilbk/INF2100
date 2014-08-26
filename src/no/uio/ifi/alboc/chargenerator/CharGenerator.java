@@ -5,6 +5,7 @@ package no.uio.ifi.alboc.chargenerator;
  */
 
 import java.io.*;
+
 import no.uio.ifi.alboc.alboc.AlboC;
 import no.uio.ifi.alboc.error.Error;
 import no.uio.ifi.alboc.log.Log;
@@ -14,7 +15,7 @@ import no.uio.ifi.alboc.log.Log;
  */
 public class CharGenerator {
 	public static char curC, nextC;
-
+	
 	private static LineNumberReader sourceFile = null;
 	private static String sourceLine;
 	private static int sourcePos;
@@ -25,7 +26,11 @@ public class CharGenerator {
 		} catch (FileNotFoundException e) {
 			Error.error("Cannot read " + AlboC.sourceName + "!");
 		}
-		sourceLine = "";
+		try {
+			sourceLine = sourceFile.readLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		sourcePos = 0;
 		curC = nextC = ' ';
 		readNext();
@@ -43,8 +48,7 @@ public class CharGenerator {
 	}
 
 	public static boolean isMoreToRead() {
-		// -- Must be changed in part 0:
-		return false;
+		return sourceLine != null;
 	}
 
 	public static int curLineNum() {
@@ -53,9 +57,21 @@ public class CharGenerator {
 
 	public static void readNext() {
 		curC = nextC;
+		sourcePos++;
+		while(sourcePos == sourceLine.length()) {
+			try {
+				sourceLine = sourceFile.readLine();
+				sourcePos = 0;
+				if(sourceLine.length() >= 1 && sourceLine.charAt(0) == '#') {
+					sourcePos = sourceLine.length();
+				}
+				System.out.println(sourceLine);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		if (!isMoreToRead())
 			return;
-
-		// -- Must be changed in part 0:
+		nextC = sourceLine.charAt(sourcePos);
 	}
 }

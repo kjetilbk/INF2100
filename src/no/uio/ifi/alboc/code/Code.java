@@ -16,6 +16,7 @@ public class Code {
 	private static boolean generatingData = false;
 
 	public static void init() {
+		
 		String codeFileName;
 
 		if (AlboC.sourceBaseName == null)
