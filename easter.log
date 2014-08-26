@@ -1,475 +1,488 @@
-   1: /* Test program 'easter'
    2:                 ========
    3:    Computes Easter Sunday for the years 2010-2020. 
    4: */
    5: 
    6: int mod (int x, int y)
-Scanner:  intToken
-Scanner:  nameToken mod
-Scanner:  leftParToken
-Scanner:  intToken
-Scanner:  nameToken x
-Scanner:  commaToken
-Scanner:  intToken
-Scanner:  nameToken y
-Scanner:  rightParToken
+Scanner: intToken
+Scanner: nameToken mod
+Scanner: leftParToken
+Scanner: intToken
+Scanner: nameToken x
+Scanner: commaToken
+Scanner: intToken
    7: { /* Computes x%y */
-Scanner:  leftCurlToken
+Scanner: nameToken y
+Scanner: rightParToken
+Scanner: leftCurlToken
    8:   return x - (x/y*y);
-Scanner:  returnToken
-Scanner:  nameToken x
-Scanner:  subtractToken
-Scanner:  leftParToken
-Scanner:  nameToken x
-Scanner:  divideToken
-Scanner:  nameToken y
-Scanner:  starToken
-Scanner:  nameToken y
-Scanner:  rightParToken
-Scanner:  semicolonToken
+Scanner: returnToken
+Scanner: nameToken x
+Scanner: subtractToken
+Scanner: leftParToken
+Scanner: nameToken x
+Scanner: divideToken
+Scanner: nameToken y
+Scanner: starToken
+Scanner: nameToken y
    9: }
-Scanner:  rightCurlToken
-  10: 
-  11: int easter (int y)
-Scanner:  intToken
-Scanner:  nameToken easter
-Scanner:  leftParToken
-Scanner:  intToken
-Scanner:  nameToken y
-Scanner:  rightParToken
-  12: {
-Scanner:  leftCurlToken
-  13:   int a;  int b;  int c;  int d;  int e;  int f;
-Scanner:  intToken
-Scanner:  nameToken a
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken b
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken c
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken d
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken e
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken f
-Scanner:  semicolonToken
-  14:   int g;  int h;  int i;  int k;  int l;  int m;
-Scanner:  intToken
-Scanner:  nameToken g
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken h
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken i
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken k
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken l
-Scanner:  semicolonToken
-Scanner:  intToken
-Scanner:  nameToken m
-Scanner:  semicolonToken
-  15: 
-  16:   int month;  /* The date of Easter Sunday */
-Scanner:  intToken
-Scanner:  nameToken month
-Scanner:  semicolonToken
-  17:   int m_name[5];
-Scanner:  intToken
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 5
-Scanner:  rightBracketToken
-Scanner:  semicolonToken
-  18:   int day;
-Scanner:  intToken
-Scanner:  nameToken day
-Scanner:  semicolonToken
-  19: 
-  20:   int ix;
-Scanner:  intToken
-Scanner:  nameToken ix
-Scanner:  semicolonToken
-  21: 
-  22:   a = mod(y,19);
-Scanner:  nameToken a
-Scanner:  assignToken
-Scanner:  nameToken mod
-Scanner:  leftParToken
-Scanner:  nameToken y
-Scanner:  commaToken
-Scanner:  numberToken 19
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  23:   b = y / 100;
-Scanner:  nameToken b
-Scanner:  assignToken
-Scanner:  nameToken y
-Scanner:  divideToken
-Scanner:  numberToken 100
-Scanner:  semicolonToken
-  24:   c = mod(y,100);
-Scanner:  nameToken c
-Scanner:  assignToken
-Scanner:  nameToken mod
-Scanner:  leftParToken
-Scanner:  nameToken y
-Scanner:  commaToken
-Scanner:  numberToken 100
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  25:   d = b / 4;
-Scanner:  nameToken d
-Scanner:  assignToken
-Scanner:  nameToken b
-Scanner:  divideToken
-Scanner:  numberToken 4
-Scanner:  semicolonToken
-  26:   e = mod(b,4);
-Scanner:  nameToken e
-Scanner:  assignToken
-Scanner:  nameToken mod
-Scanner:  leftParToken
-Scanner:  nameToken b
-Scanner:  commaToken
-Scanner:  numberToken 4
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  27:   f = (b+8) / 25;
-Scanner:  nameToken f
-Scanner:  assignToken
-Scanner:  leftParToken
-Scanner:  nameToken b
-Scanner:  addToken
-Scanner:  numberToken 8
-Scanner:  rightParToken
-Scanner:  divideToken
-Scanner:  numberToken 25
-Scanner:  semicolonToken
-  28:   g = (b-f+1) / 3;
-Scanner:  nameToken g
-Scanner:  assignToken
-Scanner:  leftParToken
-Scanner:  nameToken b
-Scanner:  subtractToken
-Scanner:  nameToken f
-Scanner:  addToken
-Scanner:  numberToken 1
-Scanner:  rightParToken
-Scanner:  divideToken
-Scanner:  numberToken 3
-Scanner:  semicolonToken
-  29:   h = mod(19*a+b-d-g+15,30);
-Scanner:  nameToken h
-Scanner:  assignToken
-Scanner:  nameToken mod
-Scanner:  leftParToken
-Scanner:  numberToken 19
-Scanner:  starToken
-Scanner:  nameToken a
-Scanner:  addToken
-Scanner:  nameToken b
-Scanner:  subtractToken
-Scanner:  nameToken d
-Scanner:  subtractToken
-Scanner:  nameToken g
-Scanner:  addToken
-Scanner:  numberToken 15
-Scanner:  commaToken
-Scanner:  numberToken 30
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  30:   i = c / 4;
-Scanner:  nameToken i
-Scanner:  assignToken
-Scanner:  nameToken c
-Scanner:  divideToken
-Scanner:  numberToken 4
-Scanner:  semicolonToken
-  31:   k = mod(c,4);
-Scanner:  nameToken k
-Scanner:  assignToken
-Scanner:  nameToken mod
-Scanner:  leftParToken
-Scanner:  nameToken c
-Scanner:  commaToken
-Scanner:  numberToken 4
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  32:   l = mod(32+2*e+2*i-h-k,7);
-Scanner:  nameToken l
-Scanner:  assignToken
-Scanner:  nameToken mod
-Scanner:  leftParToken
-Scanner:  numberToken 32
-Scanner:  addToken
-Scanner:  numberToken 2
-Scanner:  starToken
-Scanner:  nameToken e
-Scanner:  addToken
-Scanner:  numberToken 2
-Scanner:  starToken
-Scanner:  nameToken i
-Scanner:  subtractToken
-Scanner:  nameToken h
-Scanner:  subtractToken
-Scanner:  nameToken k
-Scanner:  commaToken
-Scanner:  numberToken 7
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  33:   m = (a+11*h+22*l) / 451;
-Scanner:  nameToken m
-Scanner:  assignToken
-Scanner:  leftParToken
-Scanner:  nameToken a
-Scanner:  addToken
-Scanner:  numberToken 11
-Scanner:  starToken
-Scanner:  nameToken h
-Scanner:  addToken
-Scanner:  numberToken 22
-Scanner:  starToken
-Scanner:  nameToken l
-Scanner:  rightParToken
-Scanner:  divideToken
-Scanner:  numberToken 451
-Scanner:  semicolonToken
-  34: 
-  35:   month = (h+l-(7*m)+114) / 31;
-Scanner:  nameToken month
-Scanner:  assignToken
-Scanner:  leftParToken
-Scanner:  nameToken h
-Scanner:  addToken
-Scanner:  nameToken l
-Scanner:  subtractToken
-Scanner:  leftParToken
-Scanner:  numberToken 7
-Scanner:  starToken
-Scanner:  nameToken m
-Scanner:  rightParToken
-Scanner:  addToken
-Scanner:  numberToken 114
-Scanner:  rightParToken
-Scanner:  divideToken
-Scanner:  numberToken 31
-Scanner:  semicolonToken
-  36:   day = mod(h+l-(7*m)+114,31) + 1;
-Scanner:  nameToken day
-Scanner:  assignToken
-Scanner:  nameToken mod
-Scanner:  leftParToken
-Scanner:  nameToken h
-Scanner:  addToken
-Scanner:  nameToken l
-Scanner:  subtractToken
-Scanner:  leftParToken
-Scanner:  numberToken 7
-Scanner:  starToken
-Scanner:  nameToken m
-Scanner:  rightParToken
-Scanner:  addToken
-Scanner:  numberToken 114
-Scanner:  commaToken
-Scanner:  numberToken 31
-Scanner:  rightParToken
-Scanner:  addToken
-Scanner:  numberToken 1
-Scanner:  semicolonToken
-  37:   if (month == 3) {
-Scanner:  ifToken
-Scanner:  leftParToken
-Scanner:  nameToken month
-Scanner:  equalToken
-Scanner:  numberToken 3
-Scanner:  rightParToken
-Scanner:  leftCurlToken
-  38:     m_name[0] = 'M';  m_name[1] = 'a';  m_name[2] = 'r';
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 0
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 77
-Scanner:  semicolonToken
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 1
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 97
-Scanner:  semicolonToken
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 2
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 114
-Scanner:  semicolonToken
-  39:     m_name[3] = 'c';  m_name[4] = 'h';
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 3
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 99
-Scanner:  semicolonToken
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 4
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 104
-Scanner:  semicolonToken
-  40:   } else {
-Scanner:  rightCurlToken
-Scanner:  elseToken
-Scanner:  leftCurlToken
-  41:     m_name[0] = 'A';  m_name[1] = 'p';  m_name[2] = 'r';
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 0
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 65
-Scanner:  semicolonToken
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 1
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 112
-Scanner:  semicolonToken
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 2
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 114
-Scanner:  semicolonToken
-  42:     m_name[3] = 'i';  m_name[4] = 'l';
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 3
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 105
-Scanner:  semicolonToken
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  numberToken 4
-Scanner:  rightBracketToken
-Scanner:  assignToken
-Scanner:  numberToken 108
-Scanner:  semicolonToken
-  43:   }
-Scanner:  rightCurlToken
-  44: 
-  45:   /* Print the answer: */
-  46:   putint(day);  putchar(' ');
-Scanner:  nameToken putint
-Scanner:  leftParToken
-Scanner:  nameToken day
-Scanner:  rightParToken
-Scanner:  semicolonToken
-Scanner:  nameToken putchar
-Scanner:  leftParToken
-Scanner:  numberToken 32
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  47:   for (ix = 0;  ix < 5;  ix = ix+1) { putchar(m_name[ix]); }
-Scanner:  forToken
-Scanner:  leftParToken
-Scanner:  nameToken ix
-Scanner:  assignToken
-Scanner:  numberToken 0
-Scanner:  semicolonToken
-Scanner:  nameToken ix
-Scanner:  lessToken
-Scanner:  numberToken 5
-Scanner:  semicolonToken
-Scanner:  nameToken ix
-Scanner:  assignToken
-Scanner:  nameToken ix
-Scanner:  addToken
-Scanner:  numberToken 1
-Scanner:  rightParToken
-Scanner:  leftCurlToken
-Scanner:  nameToken putchar
-Scanner:  leftParToken
-Scanner:  nameToken m_name
-Scanner:  leftBracketToken
-Scanner:  nameToken ix
-Scanner:  rightBracketToken
-Scanner:  rightParToken
-Scanner:  semicolonToken
-Scanner:  rightCurlToken
-  48: }
-Scanner:  rightCurlToken
-  49: 
-  50: int main () 
-Scanner:  intToken
-Scanner:  nameToken main
-Scanner:  leftParToken
-Scanner:  rightParToken
-  51: {
-Scanner:  leftCurlToken
-  52:   int y;
-Scanner:  intToken
-Scanner:  nameToken y
-Scanner:  semicolonToken
-  53: 
-  54:   for (y = 2010;  y <= 2020;  y = y+1) {
-Scanner:  forToken
-Scanner:  leftParToken
-Scanner:  nameToken y
-Scanner:  assignToken
-Scanner:  numberToken 2010
-Scanner:  semicolonToken
-Scanner:  nameToken y
-Scanner:  lessEqualToken
-Scanner:  numberToken 2020
-Scanner:  semicolonToken
-Scanner:  nameToken y
-Scanner:  assignToken
-Scanner:  nameToken y
-Scanner:  addToken
-Scanner:  numberToken 1
-Scanner:  rightParToken
-Scanner:  leftCurlToken
-  55:     easter(y);  putchar(' ');
-Scanner:  nameToken easter
-Scanner:  leftParToken
-Scanner:  nameToken y
-Scanner:  rightParToken
-Scanner:  semicolonToken
-Scanner:  nameToken putchar
-Scanner:  leftParToken
-Scanner:  numberToken 32
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  56:     putint(y);  putchar(10);
-Scanner:  nameToken putint
-Scanner:  leftParToken
-Scanner:  nameToken y
-Scanner:  rightParToken
-Scanner:  semicolonToken
-Scanner:  nameToken putchar
-Scanner:  leftParToken
-Scanner:  numberToken 10
-Scanner:  rightParToken
-Scanner:  semicolonToken
-  57:   }   
-Scanner:  rightCurlToken
-  58: }
-Scanner:  rightCurlToken
-Scanner:  eofToken
+Scanner: rightParToken
+   10: 
+   11: int easter (int y)
+Scanner: semicolonToken
+Scanner: rightCurlToken
+Scanner: intToken
+Scanner: nameToken easter
+Scanner: leftParToken
+Scanner: intToken
+   12: {
+Scanner: nameToken y
+   13:   int a;  int b;  int c;  int d;  int e;  int f;
+Scanner: rightParToken
+Scanner: leftCurlToken
+Scanner: intToken
+Scanner: nameToken a
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken b
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken c
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken d
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken e
+Scanner: semicolonToken
+Scanner: intToken
+   14:   int g;  int h;  int i;  int k;  int l;  int m;
+Scanner: nameToken f
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken g
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken h
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken i
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken k
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken l
+Scanner: semicolonToken
+Scanner: intToken
+   15: 
+   16:   int month;  /* The date of Easter Sunday */
+Scanner: nameToken m
+Scanner: semicolonToken
+Scanner: intToken
+Scanner: nameToken month
+Scanner: semicolonToken
+   17:   int m_name[5];
+Scanner: intToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 5
+   18:   int day;
+Scanner: rightBracketToken
+Scanner: semicolonToken
+Scanner: intToken
+   19: 
+   20:   int ix;
+Scanner: nameToken day
+Scanner: semicolonToken
+Scanner: intToken
+   21: 
+   22:   a = mod(y,19);
+Scanner: nameToken ix
+Scanner: semicolonToken
+Scanner: nameToken a
+Scanner: assignToken
+Scanner: nameToken mod
+Scanner: leftParToken
+Scanner: nameToken y
+Scanner: commaToken
+Scanner: numberToken 19
+   23:   b = y / 100;
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken b
+Scanner: assignToken
+Scanner: nameToken y
+Scanner: divideToken
+   24:   c = mod(y,100);
+Scanner: numberToken 100
+Scanner: semicolonToken
+Scanner: nameToken c
+Scanner: assignToken
+Scanner: nameToken mod
+Scanner: leftParToken
+Scanner: nameToken y
+Scanner: commaToken
+Scanner: numberToken 100
+   25:   d = b / 4;
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken d
+Scanner: assignToken
+Scanner: nameToken b
+Scanner: divideToken
+   26:   e = mod(b,4);
+Scanner: numberToken 4
+Scanner: semicolonToken
+Scanner: nameToken e
+Scanner: assignToken
+Scanner: nameToken mod
+Scanner: leftParToken
+Scanner: nameToken b
+Scanner: commaToken
+Scanner: numberToken 4
+   27:   f = (b+8) / 25;
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken f
+Scanner: assignToken
+Scanner: leftParToken
+Scanner: nameToken b
+Scanner: addToken
+Scanner: numberToken 8
+Scanner: rightParToken
+Scanner: divideToken
+   28:   g = (b-f+1) / 3;
+Scanner: numberToken 25
+Scanner: semicolonToken
+Scanner: nameToken g
+Scanner: assignToken
+Scanner: leftParToken
+Scanner: nameToken b
+Scanner: subtractToken
+Scanner: nameToken f
+Scanner: addToken
+Scanner: numberToken 1
+Scanner: rightParToken
+Scanner: divideToken
+   29:   h = mod(19*a+b-d-g+15,30);
+Scanner: numberToken 3
+Scanner: semicolonToken
+Scanner: nameToken h
+Scanner: assignToken
+Scanner: nameToken mod
+Scanner: leftParToken
+Scanner: numberToken 19
+Scanner: starToken
+Scanner: nameToken a
+Scanner: addToken
+Scanner: nameToken b
+Scanner: subtractToken
+Scanner: nameToken d
+Scanner: subtractToken
+Scanner: nameToken g
+Scanner: addToken
+Scanner: numberToken 15
+Scanner: commaToken
+Scanner: numberToken 30
+   30:   i = c / 4;
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken i
+Scanner: assignToken
+Scanner: nameToken c
+Scanner: divideToken
+   31:   k = mod(c,4);
+Scanner: numberToken 4
+Scanner: semicolonToken
+Scanner: nameToken k
+Scanner: assignToken
+Scanner: nameToken mod
+Scanner: leftParToken
+Scanner: nameToken c
+Scanner: commaToken
+Scanner: numberToken 4
+   32:   l = mod(32+2*e+2*i-h-k,7);
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken l
+Scanner: assignToken
+Scanner: nameToken mod
+Scanner: leftParToken
+Scanner: numberToken 32
+Scanner: addToken
+Scanner: numberToken 2
+Scanner: starToken
+Scanner: nameToken e
+Scanner: addToken
+Scanner: numberToken 2
+Scanner: starToken
+Scanner: nameToken i
+Scanner: subtractToken
+Scanner: nameToken h
+Scanner: subtractToken
+Scanner: nameToken k
+Scanner: commaToken
+Scanner: numberToken 7
+   33:   m = (a+11*h+22*l) / 451;
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken m
+Scanner: assignToken
+Scanner: leftParToken
+Scanner: nameToken a
+Scanner: addToken
+Scanner: numberToken 11
+Scanner: starToken
+Scanner: nameToken h
+Scanner: addToken
+Scanner: numberToken 22
+Scanner: starToken
+Scanner: nameToken l
+Scanner: rightParToken
+Scanner: divideToken
+   34: 
+   35:   month = (h+l-(7*m)+114) / 31;
+Scanner: numberToken 451
+Scanner: semicolonToken
+Scanner: nameToken month
+Scanner: assignToken
+Scanner: leftParToken
+Scanner: nameToken h
+Scanner: addToken
+Scanner: nameToken l
+Scanner: subtractToken
+Scanner: leftParToken
+Scanner: numberToken 7
+Scanner: starToken
+Scanner: nameToken m
+Scanner: rightParToken
+Scanner: addToken
+Scanner: numberToken 114
+Scanner: rightParToken
+Scanner: divideToken
+   36:   month = (h+1
+Scanner: numberToken 31
+Scanner: semicolonToken
+Scanner: nameToken month
+Scanner: assignToken
+Scanner: leftParToken
+Scanner: nameToken h
+   37:   -7);
+Scanner: addToken
+Scanner: numberToken 1
+Scanner: subtractToken
+Scanner: numberToken 7
+   38:   day = mod(h+l-(7*m)+114,31) + 1;
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken day
+Scanner: assignToken
+Scanner: nameToken mod
+Scanner: leftParToken
+Scanner: nameToken h
+Scanner: addToken
+Scanner: nameToken l
+Scanner: subtractToken
+Scanner: leftParToken
+Scanner: numberToken 7
+Scanner: starToken
+Scanner: nameToken m
+Scanner: rightParToken
+Scanner: addToken
+Scanner: numberToken 114
+Scanner: commaToken
+Scanner: numberToken 31
+Scanner: rightParToken
+Scanner: addToken
+   39:   if (month == 3) {
+Scanner: numberToken 1
+Scanner: semicolonToken
+Scanner: ifToken
+Scanner: leftParToken
+Scanner: nameToken month
+Scanner: equalToken
+Scanner: assignToken
+Scanner: numberToken 3
+Scanner: rightParToken
+   40:     m_name[0] = 'M';  m_name[1] = 'a';  m_name[2] = 'r';
+Scanner: leftCurlToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 0
+Scanner: rightBracketToken
+Scanner: assignToken
+Scanner: numberToken 77
+Scanner: semicolonToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 1
+Scanner: rightBracketToken
+Scanner: assignToken
+Scanner: numberToken 97
+Scanner: semicolonToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 2
+Scanner: rightBracketToken
+Scanner: assignToken
+   41:     m_name[3] = 'c';  m_name[4] = 'h';
+Scanner: numberToken 114
+Scanner: semicolonToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 3
+Scanner: rightBracketToken
+Scanner: assignToken
+Scanner: numberToken 99
+Scanner: semicolonToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 4
+Scanner: rightBracketToken
+Scanner: assignToken
+   42:   } else {
+Scanner: numberToken 104
+Scanner: semicolonToken
+Scanner: rightCurlToken
+Scanner: nameToken else
+   43:     m_name[0] = 'A';  m_name[1] = 'p';  m_name[2] = 'r';
+Scanner: leftCurlToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 0
+Scanner: rightBracketToken
+Scanner: assignToken
+Scanner: numberToken 65
+Scanner: semicolonToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 1
+Scanner: rightBracketToken
+Scanner: assignToken
+Scanner: numberToken 112
+Scanner: semicolonToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 2
+Scanner: rightBracketToken
+Scanner: assignToken
+   44:     m_name[3] = 'i';  m_name[4] = 'l';
+Scanner: numberToken 114
+Scanner: semicolonToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 3
+Scanner: rightBracketToken
+Scanner: assignToken
+Scanner: numberToken 105
+Scanner: semicolonToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: numberToken 4
+Scanner: rightBracketToken
+Scanner: assignToken
+   45:   }
+Scanner: numberToken 108
+Scanner: semicolonToken
+   46: 
+   47:   /* Print the answer: */
+Scanner: rightCurlToken
+   48:   putint(day);  putchar(' ');
+Scanner: nameToken putint
+Scanner: leftParToken
+Scanner: nameToken day
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken putchar
+Scanner: leftParToken
+Scanner: numberToken 32
+   49:   for (ix = 0;  ix < 5;  ix = ix+1) { putchar(m_name[ix]); }
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken for
+Scanner: leftParToken
+Scanner: nameToken ix
+Scanner: assignToken
+Scanner: numberToken 0
+Scanner: semicolonToken
+Scanner: nameToken ix
+Scanner: lessToken
+Scanner: numberToken 5
+Scanner: semicolonToken
+Scanner: nameToken ix
+Scanner: assignToken
+Scanner: nameToken ix
+Scanner: addToken
+Scanner: numberToken 1
+Scanner: rightParToken
+Scanner: leftCurlToken
+Scanner: nameToken putchar
+Scanner: leftParToken
+Scanner: nameToken m_name
+Scanner: leftBracketToken
+Scanner: nameToken ix
+Scanner: rightBracketToken
+Scanner: rightParToken
+Scanner: semicolonToken
+   50: }
+   51: 
+   52: int main () 
+Scanner: rightCurlToken
+Scanner: rightCurlToken
+Scanner: intToken
+Scanner: nameToken main
+Scanner: leftParToken
+   53: {
+Scanner: rightParToken
+   54:   int y;
+Scanner: leftCurlToken
+Scanner: intToken
+   55: 
+   56:   for (y = 2010;  y <= 2020;  y = y+1) {
+Scanner: nameToken y
+Scanner: semicolonToken
+Scanner: nameToken for
+Scanner: leftParToken
+Scanner: nameToken y
+Scanner: assignToken
+Scanner: numberToken 2010
+Scanner: semicolonToken
+Scanner: nameToken y
+Scanner: lessEqualToken
+Scanner: assignToken
+Scanner: numberToken 2020
+Scanner: semicolonToken
+Scanner: nameToken y
+Scanner: assignToken
+Scanner: nameToken y
+Scanner: addToken
+Scanner: numberToken 1
+Scanner: rightParToken
+   57:     easter(y);  putchar(' ');
+Scanner: leftCurlToken
+Scanner: nameToken easter
+Scanner: leftParToken
+Scanner: nameToken y
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken putchar
+Scanner: leftParToken
+Scanner: numberToken 32
+   58:     putint(y);  putchar(10);
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken putint
+Scanner: leftParToken
+Scanner: nameToken y
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: nameToken putchar
+Scanner: leftParToken
+Scanner: numberToken 10
+   59:   }   
+Scanner: rightParToken
+Scanner: semicolonToken
+Scanner: rightCurlToken
+   60: }
+   60: null
+Scanner: eofToken

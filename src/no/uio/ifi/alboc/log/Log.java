@@ -84,7 +84,7 @@ public class Log {
 		if (!doLogParser && !doLogScanner)
 			return;
 
-		writeLogLine(lineNum + ": " + line);
+		writeLogLine("   " + lineNum + ": " + line);
 	}
 
 	/**
@@ -95,9 +95,13 @@ public class Log {
 	public static void noteToken() {
 		if (!doLogScanner)
 			return;
-
-		if(Scanner.nextToken == Token.nameToken) writeLogLine("Scanner: " + Scanner.nextToken + " " + Scanner.nextName);
-		else if(Scanner.nextToken == Token.numberToken) writeLogLine("Scanner: " + Scanner.nextToken + " " + Scanner.nextNum);
+		if(Scanner.nextToken == Token.startCommentToken)
+			return;
+		
+		if(Scanner.nextToken == Token.nameToken)
+			writeLogLine("Scanner: " + Scanner.nextToken + " " + Scanner.nextName);
+		else if(Scanner.nextToken == Token.numberToken)
+			writeLogLine("Scanner: " + Scanner.nextToken + " " + Scanner.nextNum);
 		else writeLogLine("Scanner: " + Scanner.nextToken);
 	}
 

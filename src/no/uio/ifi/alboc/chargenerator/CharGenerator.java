@@ -19,7 +19,7 @@ public class CharGenerator {
 	private static LineNumberReader sourceFile = null;
 	private static String sourceLine;
 	private static int sourcePos;
-
+	
 	public static void init() {
 		try {
 			sourceFile = new LineNumberReader(new FileReader(AlboC.sourceName));
@@ -56,23 +56,22 @@ public class CharGenerator {
 	}
 
 	public static void readNext() {
-		curC = nextC;
-		nextC = sourceLine.charAt(sourcePos);
-		sourcePos++;
+		if(sourceLine == null) return;
+		
 		while(sourcePos == sourceLine.length()) {
 			try {
 				sourceLine = sourceFile.readLine();
-				if(sourceLine == null) break;
-				else {
-					Log.noteSourceLine(sourceFile.getLineNumber(), sourceLine);
-				}
-				sourcePos = 0;
-				if(sourceLine.length() >= 1 && sourceLine.charAt(0) == '#') {
-					sourcePos = sourceLine.length();
-				}
+				Log.noteSourceLine(curLineNum(), sourceLine);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			if (sourceLine == null)
+				return;
+			sourcePos = 0;
 		}
+		curC = nextC;
+		nextC = sourceLine.charAt(sourcePos);
+		sourcePos++;
 	}
+
 }

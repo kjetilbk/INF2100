@@ -50,28 +50,42 @@ public class Scanner {
 					token = eofToken;
 				}
 				if(token == null) token = Token.checkSingleCharToken(CharGenerator.curC);
+				if(token == Token.lineCommentToken) {
+					while(CharGenerator.curLineNum() == nextLine) CharGenerator.readNext();
+					token = null;
+				}
 				if(token == null) token = Token.checkDoubleCharToken(CharGenerator.curC, CharGenerator.nextC);
 				if(token == Token.startCommentToken) {
 					CharGenerator.readNext();
-					boolean brk = false;
-					while(brk == false) {
+					while(true) {
 						CharGenerator.readNext();
 						if(CharGenerator.curC == '*' && CharGenerator.nextC == '/') {
 							CharGenerator.readNext();
 							CharGenerator.readNext();
-							brk = true;
+							break;
 						}
 					}
 					nextLine = CharGenerator.curLineNum();
 				}
-				if(isLetterAZ(CharGenerator.curC)) {
+				if(isLetterAZ(CharGenerator.curC) || isValidNameChar(CharGenerator.curC)) {
 					String name = "";
-					while(isLetterAZ(CharGenerator.curC)) {
+					while(isLetterAZ(CharGenerator.curC) || isValidNameChar(CharGenerator.curC)) {
 						name += CharGenerator.curC;
 						CharGenerator.readNext();
 					}
 					nextName = name;
 					token = Token.checkStringToken(name);
+				}
+				else if(CharGenerator.curC == '\'') {
+						CharGenerator.readNext();
+						if(CharGenerator.nextC == '\'') {
+							nextNum = (int)CharGenerator.curC;
+							token = Token.numberToken;
+							CharGenerator.readNext();
+							CharGenerator.readNext();
+						} else {
+							Error.error(CharGenerator.curLineNum(), "Expected ', got " + CharGenerator.nextC);
+						}
 				} else if(isDigit(CharGenerator.curC)) {
 					String num = "";
 					while(isDigit(CharGenerator.curC)) {
@@ -80,16 +94,13 @@ public class Scanner {
 					}
 					nextNum = Integer.parseInt(num);
 					token = Token.numberToken;
-				}
+				} else if (token != null) CharGenerator.readNext();
 				if(token == null)
 					Error.error(nextLine, "Illegal symbol: '" + CharGenerator.curC
 							+ "'!");
 				
 				nextToken = token;
 			}
-
-			if(nextToken != eofToken) CharGenerator.readNext();
-
 		}
 		Log.noteToken();
 	}
@@ -100,6 +111,15 @@ public class Scanner {
 	
 	private static boolean isLetterAZ(char c) {
 		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+	}
+	
+	private static boolean isValidNameChar(char c) {
+		switch(c) {
+		case '_':
+			return true;
+		default:
+			return false;
+		}
 	}
 
 	public static void check(Token t) {
