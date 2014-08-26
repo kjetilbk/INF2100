@@ -5,9 +5,11 @@ package no.uio.ifi.alboc.log;
  */
 
 import java.io.*;
+
 import no.uio.ifi.alboc.alboc.AlboC;
 import no.uio.ifi.alboc.error.Error;
 import no.uio.ifi.alboc.scanner.Scanner;
+import no.uio.ifi.alboc.scanner.Token;
 import static no.uio.ifi.alboc.scanner.Token.*;
 import no.uio.ifi.alboc.types.*;
 
@@ -82,7 +84,7 @@ public class Log {
 		if (!doLogParser && !doLogScanner)
 			return;
 
-		// -- Must be changed in part 0:
+		writeLogLine(lineNum + ": " + line);
 	}
 
 	/**
@@ -94,7 +96,9 @@ public class Log {
 		if (!doLogScanner)
 			return;
 
-		// -- Must be changed in part 0:
+		if(Scanner.nextToken == Token.nameToken) writeLogLine("Scanner: " + Scanner.nextToken + " " + Scanner.nextName);
+		else if(Scanner.nextToken == Token.numberToken) writeLogLine("Scanner: " + Scanner.nextToken + " " + Scanner.nextNum);
+		else writeLogLine("Scanner: " + Scanner.nextToken);
 	}
 
 	public static void noteBinding(String name, int lineNum, int useLineNum) {

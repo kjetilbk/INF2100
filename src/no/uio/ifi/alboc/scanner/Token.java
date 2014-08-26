@@ -39,7 +39,10 @@ public enum Token {
 			return addToken;
 		case '-':
 			return subtractToken;
+		case '\'':
+			return ampToken;
 		case '#':
+			return startCommentToken;
 		default:
 			return null;
 		}
@@ -56,18 +59,26 @@ public enum Token {
 		case '<':
 			if(next == '=') return lessEqualToken;
 			else return lessToken;
-		case '!':
-			if(next == '=') return notEqualToken;
-			else Error.error(CharGenerator.curLineNum(), "Expected '=', got " + next + "!");
 		case '/':
 			if(next == '*') return startCommentToken;
 			else return divideToken;
 		case '*':
-			if(next == '/') return endCommentToken;
+			if(next == '/') return endCommentToken; // egentlig ubrukelig ??
 			else return starToken;
+		case '!':
+			if(next == '=') return notEqualToken;
+			else Error.error(CharGenerator.curLineNum(), "Expected '=', got " + next + "!");
 		default:
 			return null;
 		}
+	}
+	
+	public static Token checkStringToken(String str) {
+		if(str.compareTo("return") == 0) return returnToken;
+		else if(str.compareTo("int") == 0) return intToken;
+		else if(str.compareTo("while") == 0) return whileToken;
+		else if(str.compareTo("if") == 0) return ifToken;
+		return nameToken;
 	}
 	
 	public static boolean isFactorOperator(Token t) {

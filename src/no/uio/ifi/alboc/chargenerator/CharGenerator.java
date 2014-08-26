@@ -57,21 +57,22 @@ public class CharGenerator {
 
 	public static void readNext() {
 		curC = nextC;
+		nextC = sourceLine.charAt(sourcePos);
 		sourcePos++;
 		while(sourcePos == sourceLine.length()) {
 			try {
 				sourceLine = sourceFile.readLine();
+				if(sourceLine == null) break;
+				else {
+					Log.noteSourceLine(sourceFile.getLineNumber(), sourceLine);
+				}
 				sourcePos = 0;
 				if(sourceLine.length() >= 1 && sourceLine.charAt(0) == '#') {
 					sourcePos = sourceLine.length();
 				}
-				System.out.println(sourceLine);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		if (!isMoreToRead())
-			return;
-		nextC = sourceLine.charAt(sourcePos);
 	}
 }

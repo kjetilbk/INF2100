@@ -19,7 +19,10 @@ public class Scanner {
 	public static int curLine, nextLine;
 
 	public static void init() {
-		// -- Must be changed in part 0:
+		curToken = null;
+		curName = "";
+		curNum = -1;
+		curLine = 0;
 	}
 
 	public static void finish() {
@@ -36,13 +39,17 @@ public class Scanner {
 		nextToken = null;
 		while (nextToken == null) {
 			nextLine = CharGenerator.curLineNum();
-			CharGenerator.readNext();
 			if (!CharGenerator.isMoreToRead()) {
 				nextToken = eofToken;
 			} else
 			// -- Must be changed in part 0:
 			{
-				Token token = Token.checkSingleCharToken(CharGenerator.curC);
+				Token token = null;
+				while(CharGenerator.isMoreToRead() && (CharGenerator.curC == ' ' || CharGenerator.curC == '\n')) CharGenerator.readNext();
+				if(!CharGenerator.isMoreToRead()) {
+					token = eofToken;
+				}
+				if(token == null) token = Token.checkSingleCharToken(CharGenerator.curC);
 				if(token == null) token = Token.checkDoubleCharToken(CharGenerator.curC, CharGenerator.nextC);
 				if(token == Token.startCommentToken) {
 					CharGenerator.readNext();
@@ -55,18 +62,44 @@ public class Scanner {
 							brk = true;
 						}
 					}
+					nextLine = CharGenerator.curLineNum();
 				}
-				else if(token == null)
+				if(isLetterAZ(CharGenerator.curC)) {
+					String name = "";
+					while(isLetterAZ(CharGenerator.curC)) {
+						name += CharGenerator.curC;
+						CharGenerator.readNext();
+					}
+					nextName = name;
+					token = Token.checkStringToken(name);
+				} else if(isDigit(CharGenerator.curC)) {
+					String num = "";
+					while(isDigit(CharGenerator.curC)) {
+						num += CharGenerator.curC;
+						CharGenerator.readNext();
+					}
+					nextNum = Integer.parseInt(num);
+					token = Token.numberToken;
+				}
+				if(token == null)
 					Error.error(nextLine, "Illegal symbol: '" + CharGenerator.curC
 							+ "'!");
+				
+				nextToken = token;
 			}
+
+			if(nextToken != eofToken) CharGenerator.readNext();
 
 		}
 		Log.noteToken();
 	}
 
+	private static boolean isDigit(char c) {
+		return (c >= '0' && c <= '9');
+	}
+	
 	private static boolean isLetterAZ(char c) {
-		return (c <= 'a' && c >= 'z') || (c <= 'A' && c >= 'Z');
+		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 	}
 
 	public static void check(Token t) {
