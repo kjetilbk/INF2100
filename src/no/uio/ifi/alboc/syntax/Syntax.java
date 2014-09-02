@@ -118,7 +118,7 @@ abstract class DeclList extends SyntaxUnit {
 	DeclList outerScope;
 
 	DeclList() {
-		// -- Must be changed in part 1:
+		
 	}
 
 	@Override
@@ -138,7 +138,12 @@ abstract class DeclList extends SyntaxUnit {
 	}
 
 	void addDecl(Declaration d) {
-		// -- Must be changed in part 1:
+		if(firstDecl == null) {
+			firstDecl = d;
+		} else {
+			d.nextDecl = firstDecl;
+			firstDecl = d;
+		}
 	}
 
 	int dataSize() {
@@ -200,13 +205,34 @@ class LocalDeclList extends DeclList {
  * diagrams.)
  */
 class ParamDeclList extends DeclList {
+	
+	
 	@Override
 	void genCode(FuncDecl curFunc) {
 		// -- Must be changed in part 2:
 	}
 
 	static ParamDeclList parse() {
-		// -- Must be changed in part 1:
+		
+		ParamDeclList list = new ParamDeclList();
+		
+		Scanner.readNext();
+		Scanner.readNext();
+		
+		while(Scanner.curToken != Token.rightParToken) {
+			
+			
+			DeclType dt = DeclType.parse();
+			
+			ParamDecl pd = ParamDecl.parse(dt);
+			
+			list.addDecl(pd);
+			
+			if(Scanner.curToken == commaToken)
+				Scanner.readNext();
+		}
+		
+		Scanner.readNext();
 		return null;
 	}
 
@@ -252,6 +278,8 @@ class DeclType extends SyntaxUnit {
 		}
 
 		Log.leaveParser("</type>");
+		
+		dt.check(null);
 		return dt;
 	}
 
@@ -282,8 +310,10 @@ abstract class Declaration extends SyntaxUnit {
 	static Declaration parse(DeclType dt) {
 		Declaration d = null;
 		if (Scanner.curToken == nameToken && Scanner.nextToken == leftParToken) {
+			System.out.println("Halla");
 			d = FuncDecl.parse(dt);
 		} else if (Scanner.curToken == nameToken) {
+			System.out.println("Balla");
 			d = GlobalVarDecl.parse(dt);
 		} else {
 			Error.expected("A declaration name");
@@ -426,8 +456,19 @@ class ParamDecl extends VarDecl {
 	static ParamDecl parse(DeclType dt) {
 		Log.enterParser("<param decl>");
 
-		// -- Must be changed in part 1:
-		return null;
+		ParamDecl pd = null;
+		
+		if(Scanner.curToken == Token.nameToken) {
+			pd = new ParamDecl(Scanner.curName);
+		} else {
+			Error.expected("nameToken");
+		}
+
+		Scanner.skip(nameToken);
+		Log.leaveParser("</param decl>");
+		
+		
+		return pd;
 	}
 
 	@Override
@@ -478,8 +519,22 @@ class FuncDecl extends Declaration {
 	}
 
 	static FuncDecl parse(DeclType ts) {
-		// -- Must be changed in part 1:
-		return null;
+
+		Log.enterParser("<func>");
+		
+		FuncDecl decl = new FuncDecl(Scanner.curName);
+		
+		decl.funcParams = ParamDeclList.parse();
+		
+		if(ts.type == Types.intType) {
+			decl.exitLabel = "int";
+		} else {
+			Error.error(Scanner.nextLine, "Int Expected, But found a " + ts.type.toString());
+		}
+		
+		Log.leaveParser("</func>");
+		
+		return decl;
 	}
 
 	@Override

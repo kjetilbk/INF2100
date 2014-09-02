@@ -60,15 +60,31 @@ public class Log {
 	public static void enterParser(String symbol) {
 		if (!doLogParser)
 			return;
+		++parseLevel;
 
-		// -- Must be changed in part 1:
+		String line = "parser: ";
+		
+		for(int n = 0; n < parseLevel; n++)
+			line += ' ';
+		line += symbol;
+		
+		Log.writeLogLine(line);
 	}
 
 	public static void leaveParser(String symbol) {
 		if (!doLogParser)
 			return;
 
-		// -- Must be changed in part 1:
+
+		String line = "parser: ";
+		
+		for(int n = 0; n < parseLevel; n++)
+			line += ' ';
+		line += symbol;
+		
+		Log.writeLogLine(line);
+		
+		--parseLevel;
 	}
 
 	/**

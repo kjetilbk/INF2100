@@ -44,6 +44,6 @@ public class Error {
 
 	public static void expected(String exp) {
 		error(Scanner.curLine, exp + " expected, but found a "
-				+ Scanner.curToken + "!");
+				+ Scanner.curToken + ": " + Scanner.curName + "!");
 	}
 }

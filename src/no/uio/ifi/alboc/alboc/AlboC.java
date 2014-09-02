@@ -6,6 +6,9 @@ package no.uio.ifi.alboc.alboc;
  * (c) 2014 dag@ifi.uio.no
  */
 
+import java.util.AbstractMap;
+import java.util.TreeMap;
+
 import java.io.*;
 import no.uio.ifi.alboc.chargenerator.CharGenerator;
 import no.uio.ifi.alboc.code.Code;
@@ -21,8 +24,9 @@ import no.uio.ifi.alboc.types.Types;
  * The main program of the AlboC compiler.
  */
 public class AlboC {
-	public static final String version = "2014-08-26";
-
+	public static final String version = "2014-09-02 VETLE OG KJETIL SUPERKOMPILATOR :)))";
+	
+	
 	public static String sourceName = null, // Source file name
 			sourceBaseName = null; // Source file name without extension
 	public static boolean noLink = false; // Should we drop linking?

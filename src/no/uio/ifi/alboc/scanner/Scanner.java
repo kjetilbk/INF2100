@@ -23,11 +23,11 @@ public class Scanner {
 		curName = "";
 		curNum = -1;
 		curLine = 0;
+		readNext();
+		readNext();
 	}
 
 	public static void finish() {
-		// Kjetil er dummere
-		// -- Must be changed in part 0:
 	}
 
 	public static void readNext() {
@@ -42,7 +42,6 @@ public class Scanner {
 			if (!CharGenerator.isMoreToRead()) {
 				nextToken = eofToken;
 			} else
-			// -- Must be changed in part 0:
 			{
 				Token token = null;
 				while(CharGenerator.isMoreToRead() && (CharGenerator.curC == ' ' || CharGenerator.curC == '\n')) CharGenerator.readNext();

@@ -1,0 +1,13 @@
+#include "stdio.h"
+
+int kjetil(int x[5]) {
+	for(int n = 0; n < 5; n++) {
+		printf("%d\n", x[n]);
+	}
+}
+
+int main() {
+	int x[] = {1, 2, 3, 4, 5};
+	kjetil(x);
+	return 0;
+}
