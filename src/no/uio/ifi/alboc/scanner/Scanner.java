@@ -65,6 +65,7 @@ public class Scanner {
 						}
 					}
 					nextLine = CharGenerator.curLineNum();
+					continue;
 				}
 				if(isLetterAZ(CharGenerator.curC) || isValidNameChar(CharGenerator.curC)) {
 					String name = "";

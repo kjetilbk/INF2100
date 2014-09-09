@@ -41,6 +41,8 @@ public enum Token {
 			return subtractToken;
 		case '#':
 			return lineCommentToken;
+		case '&':
+			return ampToken;
 		default:
 			return null;
 		}
@@ -80,27 +82,24 @@ public enum Token {
 	}
 	
 	public static boolean isFactorOperator(Token t) {
-		// -- Must be changed in part 0:
-		return false;
+		return (t == starToken || t == divideToken);
 	}
 
 	public static boolean isTermOperator(Token t) {
-		// -- Must be changed in part 0:
-		return false;
+		return (t == addToken || t == subtractToken);
 	}
 
 	public static boolean isPrefixOperator(Token t) {
-		// -- Must be changed in part 0:
-		return false;
+		return (t == starToken || t == subtractToken);
 	}
 
 	public static boolean isRelOperator(Token t) {
-		// -- Must be changed in part 0:
-		return false;
+		return (t == equalToken 	|| 	t == notEqualToken ||
+				t == greaterToken 	|| 	t == greaterEqualToken ||
+				t == lessToken 		|| 	t == lessEqualToken);
 	}
 
 	public static boolean isOperand(Token t) {
-		// -- Must be changed in part 0:
-		return false;
+		return (t == ampToken || t == nameToken || t == numberToken);
 	}
 }
