@@ -27,12 +27,13 @@ parser:          <factor>
 parser:           <primary>
 parser:            <operand>
 parser:             <variable>
-parser:             </operand>
-parser:            </primary>
-parser:           </factor>
-parser:          </term>
-parser:         </expression>
-parser:        </return-statm>
-parser:       </statement>
-parser:       <statement>
-AlboC error in line 8: A statement expected, but found a leftParToken: x!
+parser:             </variable>
+parser:            </operand>
+parser:           </primary>
+parser:          </factor>
+parser:         </term>
+parser:        </expression>
+parser:       </return-statm>
+parser:      </statement>
+parser:      <statement>
+parser:      </statement>

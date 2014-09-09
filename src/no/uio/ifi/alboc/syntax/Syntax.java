@@ -624,12 +624,12 @@ abstract class Statement extends SyntaxUnit {
 
 		Statement s = null;
 		if (Scanner.curToken == nameToken && Scanner.nextToken == leftParToken) {
-			
+			System.err.println("call-statm");
 		} else if (Scanner.curToken == nameToken
 				|| Scanner.curToken == starToken) {
-			// -- Must be changed in part 1:
+			System.err.println("var-statm");
 		} else if (Scanner.curToken == forToken) {
-			// -- Must be changed in part 1:
+			System.err.println("for-statm");
 		} else if (Scanner.curToken == ifToken) {
 			s = IfStatm.parse();
 		} else if (Scanner.curToken == returnToken) {
@@ -952,7 +952,6 @@ class Term extends SyntaxUnit {
 		Term t = new Term();
 		
 		t.fac = Factor.parse();
-		
 		
 		Log.leaveParser("</term>");
 		return null;
@@ -1326,8 +1325,21 @@ class Variable extends Operand {
 
 	static Variable parse() {
 		Log.enterParser("<variable>");
-		// -- Must be changed in part 1:
-		return null;
+		Variable var = new Variable();
+		var.varName = Scanner.curName;
+		
+		Scanner.skip(Token.nameToken);
+		
+		if(Scanner.curToken == Token.leftBracketToken) {
+			Scanner.readNext();
+			var.index = Expression.parse();
+			Scanner.skip(Token.numberToken);
+			Scanner.skip(rightBracketToken);
+		}
+
+		Log.leaveParser("</variable>");
+		
+		return var;
 	}
 
 	@Override
