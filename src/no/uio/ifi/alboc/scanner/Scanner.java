@@ -5,6 +5,7 @@ package no.uio.ifi.alboc.scanner;
  */
 
 import no.uio.ifi.alboc.chargenerator.CharGenerator;
+import no.uio.ifi.alboc.error.AlboCError;
 import no.uio.ifi.alboc.error.Error;
 import no.uio.ifi.alboc.log.Log;
 import static no.uio.ifi.alboc.scanner.Token.*;
@@ -49,19 +50,20 @@ public class Scanner {
 					token = eofToken;
 				}
 				if(token == null) token = Token.checkSingleCharToken(CharGenerator.curC);
-				if(token == Token.lineCommentToken) {
-					while(CharGenerator.curLineNum() == nextLine) CharGenerator.readNext();
-					token = null;
-				}
 				if(token == null) token = Token.checkDoubleCharToken(CharGenerator.curC, CharGenerator.nextC);
 				if(token == Token.startCommentToken) {
 					CharGenerator.readNext();
 					while(true) {
-						CharGenerator.readNext();
-						if(CharGenerator.curC == '*' && CharGenerator.nextC == '/') {
+						try {
 							CharGenerator.readNext();
-							CharGenerator.readNext();
-							break;
+							if(CharGenerator.curC == '*' && CharGenerator.nextC == '/') {
+								CharGenerator.readNext();
+								CharGenerator.readNext();
+								break;
+							}
+						} catch (AlboCError e) {
+							System.err.println("Comment starting on line " + curLine + " never ends");
+							System.exit(4);
 						}
 					}
 					nextLine = CharGenerator.curLineNum();
@@ -84,7 +86,7 @@ public class Scanner {
 							CharGenerator.readNext();
 							CharGenerator.readNext();
 						} else {
-							Error.error(CharGenerator.curLineNum(), "Expected ', got " + CharGenerator.nextC);
+							Error.error(curLine, "Illegal character constant");
 						}
 				} else if(isDigit(CharGenerator.curC)) {
 					String num = "";

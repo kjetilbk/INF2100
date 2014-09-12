@@ -56,7 +56,7 @@ public class CharGenerator {
 	}
 
 	public static void readNext() {
-		if(sourceLine == null) return;
+		if(sourceLine == null) Error.error("Read from null string wtf retard");
 		
 		while(sourcePos == sourceLine.length()) {
 			try {
@@ -68,6 +68,9 @@ public class CharGenerator {
 			if (sourceLine == null)
 				return;
 			sourcePos = 0;
+			if(sourceLine.length() > 0 && sourceLine.charAt(0) == '#') {
+				sourcePos = sourceLine.length();
+			}
 		}
 		curC = nextC;
 		nextC = sourceLine.charAt(sourcePos);

@@ -15,7 +15,7 @@ public enum Token {
 	addToken, ampToken, assignToken, commaToken, divideToken, elseToken, eofToken, equalToken, forToken, greaterEqualToken,
 	greaterToken, ifToken, intToken, leftBracketToken, leftCurlToken, leftParToken, lessEqualToken, lessToken, nameToken, notEqualToken,
 	numberToken, returnToken, rightBracketToken, rightCurlToken, rightParToken, semicolonToken, starToken, subtractToken, whileToken,
-	startCommentToken, endCommentToken, lineCommentToken;
+	startCommentToken, endCommentToken;
 
 	public static Token checkSingleCharToken(char c) {
 		switch(c) {
@@ -39,8 +39,6 @@ public enum Token {
 			return addToken;
 		case '-':
 			return subtractToken;
-		case '#':
-			return lineCommentToken;
 		case '&':
 			return ampToken;
 		default:

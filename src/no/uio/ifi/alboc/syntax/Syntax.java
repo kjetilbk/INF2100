@@ -111,10 +111,74 @@ class Program extends SyntaxUnit {
 	}
 }
 
+
+/**
+ * 
+ * @author vetlebr/kjetilbk
+ *
+ * @param <_Ty1>
+ * @param <_Ty2>
+ * 
+ * A generic pair class
+ * 
+ */
+class Pair <_Ty1, _Ty2> {
+	_Ty1 first;
+	_Ty2 second;
+	
+	public Pair(_Ty1 first, _Ty2 second) {
+		this.first = first;
+		this.second = second;
+	}
+}
+
+/**
+ * 
+ * @author vetlebr/kjetilbk
+ *
+ * @param <_Ty1>
+ * @param <_Ty2>
+ * 
+ * A generic linked list for use in Factor, Term etc.
+ */
+
+
+class GenericList<_Ty1, _Ty2> {
+	
+	static class GenericNode<_Ty1, _Ty2> {
+		Pair<_Ty1, _Ty2> data;
+		
+		GenericNode<_Ty1, _Ty2> next;
+	}
+	
+	GenericNode<_Ty1, _Ty2> first, last;
+	
+	private int _size = 0;
+	
+	public int size() {return _size;}
+	
+	public void add(Pair<_Ty1, _Ty2> p) {
+		
+		GenericNode<_Ty1, _Ty2> node = new GenericNode<_Ty1, _Ty2>();
+		
+		node.data = p;
+		
+		if(first == null) {
+			first = node;
+			last = first;
+		} else {
+			last.next = node;
+			last = last.next;
+		}
+		
+		_size++;
+		
+	}
+	
+}
 /*
  * A declaration list. (This class is not mentioned in the syntax diagrams.)
  */
-
 abstract class DeclList extends SyntaxUnit {
 	Declaration firstDecl = null;
 	DeclList outerScope;
@@ -178,6 +242,7 @@ class GlobalDeclList extends DeclList {
 	static GlobalDeclList parse() {
 		GlobalDeclList gdl = new GlobalDeclList();
 
+		
 		while (Scanner.curToken == intToken) {
 			DeclType ts = DeclType.parse();
 			gdl.addDecl(Declaration.parse(ts));
@@ -204,6 +269,9 @@ class LocalDeclList extends DeclList {
 			DeclType dt = DeclType.parse();
 			Declaration d = Declaration.parse(dt);
 			list.addDecl(d);
+			
+			Scanner.skip(Token.semicolonToken);
+			
 		}
 		return list;
 	}
@@ -318,6 +386,7 @@ abstract class Declaration extends SyntaxUnit {
 
 	static Declaration parse(DeclType dt) {
 		Declaration d = null;
+		
 		if (Scanner.curToken == nameToken && Scanner.nextToken == leftParToken) {
 			d = FuncDecl.parse(dt);
 		} else if (Scanner.curToken == nameToken) {
@@ -421,8 +490,23 @@ class GlobalVarDecl extends VarDecl {
 	static GlobalVarDecl parse(DeclType dt) {
 		Log.enterParser("<var decl>");
 
-		// -- Must be changed in part 1:
-		return null;
+		GlobalVarDecl var = new GlobalVarDecl(Scanner.curName);
+		
+		Scanner.skip(Token.nameToken);
+		
+		if(Scanner.curToken == Token.leftBracketToken) {
+			var.isArray = true;
+			Scanner.readNext();
+			
+			var.numElems = Scanner.curNum;
+			
+			Scanner.skip(Token.numberToken);
+			Scanner.skip(Token.rightBracketToken);
+		}
+		
+		Log.leaveParser("</var decl>");
+		
+		return var;
 	}
 }
 
@@ -539,8 +623,7 @@ class FuncDecl extends Declaration {
 			Error.error(Scanner.nextLine, "Int Expected, But found a " + ts.type.toString());
 		}
 		
-		if(Scanner.curToken != Token.leftCurlToken)
-			Error.expected("leftCurlToken");
+		Scanner.skip(Token.leftCurlToken);
 		
 		Log.enterParser("<func body>");
 
@@ -550,6 +633,8 @@ class FuncDecl extends Declaration {
 		
 		Log.leaveParser("</func body>");
 		Log.leaveParser("</func decl>");
+		
+		Scanner.readNext();
 		
 		return decl;
 	}
@@ -593,8 +678,6 @@ class StatmList extends SyntaxUnit {
 	static StatmList parse() {
 		Log.enterParser("<statm list>");
 		
-		Scanner.skip(Token.leftCurlToken);
-		
 		StatmList sl = new StatmList();
 		//Statement lastStatm = null;
 		while (Scanner.curToken != rightCurlToken) {
@@ -627,7 +710,7 @@ abstract class Statement extends SyntaxUnit {
 			System.err.println("call-statm");
 		} else if (Scanner.curToken == nameToken
 				|| Scanner.curToken == starToken) {
-			System.err.println("var-statm");
+			System.err.println("assign-statm");
 		} else if (Scanner.curToken == forToken) {
 			System.err.println("for-statm");
 		} else if (Scanner.curToken == ifToken) {
@@ -671,6 +754,41 @@ class EmptyStatm extends Statement {
 	void printTree() {
 		// -- Must be changed in part 1:
 	}
+}
+
+/*
+ * An <assign-statm>
+ */
+
+class AssignStatm extends Statement {
+
+	@Override
+	void check(DeclList curDecls) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	void genCode(FuncDecl curFunc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	void printTree() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	static AssignStatm parse() {
+		Log.enterParser("<assign-statm>");
+		
+		
+		
+		Log.leaveParser("</assign-statm>");
+		return null;
+	}
+	
 }
 
 /*
@@ -934,7 +1052,7 @@ class Expression extends SyntaxUnit {
 class Term extends SyntaxUnit {
 	// -- Must be changed in part 1+2:
 
-	Factor fac = null;
+	GenericList<Factor, TermOpr> list = new GenericList<Factor, TermOpr>();
 	
 	@Override
 	void check(DeclList curDecls) {
@@ -951,7 +1069,20 @@ class Term extends SyntaxUnit {
 		
 		Term t = new Term();
 		
-		t.fac = Factor.parse();
+		Factor f = Factor.parse();
+		
+		t.list.add(new Pair<Factor,TermOpr>(f, null));
+		
+		if(Token.isTermOperator(Scanner.curToken)) {
+			TermOpr to = TermOpr.parse();
+			
+			t.list.last.data.second = to;
+			
+			Factor fak = Factor.parse();
+			
+			t.list.add(new Pair<Factor, TermOpr>(fak, null));
+			
+		}
 		
 		Log.leaveParser("</term>");
 		return null;
@@ -969,8 +1100,7 @@ class Term extends SyntaxUnit {
 
 class Factor extends SyntaxUnit {
 	
-	ArrayList<Primary> pList = new ArrayList<Primary>();
-	ArrayList<FacOpr> oList = new ArrayList<FacOpr>();
+    private GenericList<Primary, FacOpr> list = new GenericList<Primary, FacOpr>();
 	
 	@Override
 	void check(DeclList curDecls) {
@@ -997,14 +1127,18 @@ class Factor extends SyntaxUnit {
 		
 		Primary p = Primary.parse();
 		
-		f.pList.add(p);
+		f.list.add(new Pair<Primary, FacOpr>(p, null));
 		
 		while(Token.isFactorOperator(Scanner.curToken)) {
+			
 			FacOpr fak = FacOpr.parse();
-			f.oList.add(fak);
+			
+			f.list.last.data.second = fak;
 			
 			Primary pr = Primary.parse();
-			f.pList.add(pr);
+			
+			f.list.add(new Pair<Primary, FacOpr>(pr, null));
+			
 		}
 		
 		Log.leaveParser("</factor>");
@@ -1053,8 +1187,6 @@ class Primary extends SyntaxUnit {
 		
 		p.op = Operand.parse();
 		
-		Scanner.readNext();
-		
 		Log.leaveParser("</primary>");
 		
 		return p;
@@ -1096,8 +1228,36 @@ class FacOpr extends Operator {
 
 		Log.leaveParser("</factor opr>");
 		
-		
 		return fac;
+	}
+
+	@Override
+	void printTree() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+}
+
+class TermOpr extends Operator {
+
+	@Override
+	void genCode(FuncDecl curFunc) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	static TermOpr parse() {
+		Log.enterParser("<term opr>");
+		
+		TermOpr term = new TermOpr();
+		
+		term.oprToken = Scanner.curToken;
+		Scanner.readNext();
+
+		Log.leaveParser("</term opr>");
+		
+		return term;
 	}
 
 	@Override
@@ -1187,7 +1347,7 @@ abstract class Operand extends SyntaxUnit {
 
 	static Operand parse() {
 		Log.enterParser("<operand>");
-
+		
 		Operand o = null;
 		if (Scanner.curToken == numberToken) {
 			o = Number.parse();
@@ -1254,8 +1414,11 @@ class Number extends Operand {
 	}
 
 	static Number parse() {
-		// -- Must be changed in part 1:
-		return null;
+		Number n = new Number();
+		
+		n.numVal = Scanner.curNum;
+		
+		return n;
 	}
 
 	@Override
