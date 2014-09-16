@@ -76,6 +76,8 @@ public enum Token {
 		else if(str.compareTo("int") == 0) return intToken;
 		else if(str.compareTo("while") == 0) return whileToken;
 		else if(str.compareTo("if") == 0) return ifToken;
+		else if(str.compareTo("else") == 0) return elseToken;
+		else if(str.compareTo("for") == 0) return forToken;
 		return nameToken;
 	}
 	

@@ -28,6 +28,7 @@ public class CharGenerator {
 		}
 		try {
 			sourceLine = sourceFile.readLine();
+			Log.noteSourceLine(0, sourceLine);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -48,7 +49,7 @@ public class CharGenerator {
 	}
 
 	public static boolean isMoreToRead() {
-		return sourceLine != null;
+		return curC != 0;
 	}
 
 	public static int curLineNum() {
@@ -56,24 +57,29 @@ public class CharGenerator {
 	}
 
 	public static void readNext() {
-		if(sourceLine == null) Error.error("Read from null string wtf retard");
+		if(sourceLine == null && curC == 0)
+				Error.error("Read from null string wtf retard");
+
+		curC = nextC;
 		
-		while(sourcePos == sourceLine.length()) {
+		while(	(sourceLine != null &&
+				(sourcePos == sourceLine.length() ||
+				 sourceLine.charAt(0) == '#' ))) {
 			try {
 				sourceLine = sourceFile.readLine();
-				Log.noteSourceLine(curLineNum(), sourceLine);
+				if(sourceLine != null)
+					Log.noteSourceLine(curLineNum(), sourceLine);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			if (sourceLine == null)
+			if (sourceLine == null) {
+				nextC = 0;
 				return;
-			sourcePos = 0;
-			if(sourceLine.length() > 0 && sourceLine.charAt(0) == '#') {
-				sourcePos = sourceLine.length();
 			}
+			sourcePos = 0;
 		}
-		curC = nextC;
-		nextC = sourceLine.charAt(sourcePos);
+		if(sourceLine != null)
+			nextC = sourceLine.charAt(sourcePos);
 		sourcePos++;
 	}
 

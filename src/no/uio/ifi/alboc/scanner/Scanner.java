@@ -45,7 +45,7 @@ public class Scanner {
 			} else
 			{
 				Token token = null;
-				while(CharGenerator.isMoreToRead() && (CharGenerator.curC == ' ' || CharGenerator.curC == '\n')) CharGenerator.readNext();
+				while(CharGenerator.isMoreToRead() && (CharGenerator.curC == '\t' || CharGenerator.curC == ' ' || CharGenerator.curC == '\n')) CharGenerator.readNext();
 				if(!CharGenerator.isMoreToRead()) {
 					token = eofToken;
 				}
@@ -68,6 +68,13 @@ public class Scanner {
 					}
 					nextLine = CharGenerator.curLineNum();
 					continue;
+				}
+				if(		token == Token.equalToken || 
+						token == Token.greaterEqualToken || 
+						token == Token.lessEqualToken ||
+						token == Token.notEqualToken)
+				{
+					CharGenerator.readNext();
 				}
 				if(isLetterAZ(CharGenerator.curC) || isValidNameChar(CharGenerator.curC)) {
 					String name = "";
@@ -96,7 +103,7 @@ public class Scanner {
 					}
 					nextNum = Integer.parseInt(num);
 					token = Token.numberToken;
-				} else if (token != null) CharGenerator.readNext();
+				} else if (token != null && CharGenerator.isMoreToRead()) CharGenerator.readNext();
 				if(token == null)
 					Error.error(nextLine, "Illegal symbol: '" + CharGenerator.curC
 							+ "'!");

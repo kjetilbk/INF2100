@@ -65,7 +65,7 @@ public class Log {
 		String line = "parser: ";
 		
 		for(int n = 0; n < parseLevel; n++)
-			line += ' ';
+			line += "  ";
 		line += symbol;
 		
 		Log.writeLogLine(line);
@@ -79,7 +79,7 @@ public class Log {
 		String line = "parser: ";
 		
 		for(int n = 0; n < parseLevel; n++)
-			line += ' ';
+			line += "  ";
 		line += symbol;
 		
 		Log.writeLogLine(line);
