@@ -4,8 +4,6 @@ package no.uio.ifi.alboc.syntax;
  * module Syntax
  */
 
-import java.util.ArrayList;
-
 import no.uio.ifi.alboc.alboc.AlboC;
 import no.uio.ifi.alboc.code.Code;
 import no.uio.ifi.alboc.error.Error;
@@ -26,11 +24,11 @@ public class Syntax {
 	static Program program;
 
 	public static void init() {
-		// -- Must be changed in part 1+2:
+		// -- Must be changed in part 2:
 	}
 
 	public static void finish() {
-		// -- Must be changed in part 1+2:
+		// -- Must be changed in part 2:
 	}
 
 	public static void checkProgram() {
@@ -132,24 +130,43 @@ class Pair <_Ty1, _Ty2> {
 	}
 }
 
+class GenericNode<_Ty> {
+	_Ty data;
+	
+	GenericNode<_Ty> next;
+}
+
 /**
  * 
  * @author vetlebr/kjetilbk
  *
- * @param <_Ty1>
- * @param <_Ty2>
- * 
- * A generic linked list for use in Factor, Term etc.
+ * @param <_Ty> A generic parameter
+ * A generic iterator for looping through the GenericList.
  */
 
-
-class GenericList<_Ty> {
+class GenericIt<_Ty> {
+	GenericNode<_Ty> cur;
 	
-	static class GenericNode<_Ty> {
-		_Ty data;
-		
-		GenericNode<_Ty> next;
+	boolean hasNext() {return cur != null;}
+	
+	_Ty next() {
+		_Ty ret = cur.data;
+		cur = cur.next;
+		return ret;
 	}
+	
+	GenericIt(GenericNode<_Ty> n) {cur = n;}
+}
+
+/**
+ * A generic linked list for use in Factor, Term etc.
+ * 
+ * @author vetlebr/kjetilbk
+ * 
+ * @param <_Ty>
+ * 
+ */
+class GenericList<_Ty> {
 	
 	GenericNode<_Ty> first, last;
 	
@@ -170,10 +187,11 @@ class GenericList<_Ty> {
 			last.next = node;
 			last = last.next;
 		}
-		
 		_size++;
 		
 	}
+	
+	GenericIt<_Ty> iterator() {return new GenericIt<_Ty>(first);}
 	
 }
 /*
@@ -200,15 +218,18 @@ abstract class DeclList extends SyntaxUnit {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		for(Declaration cur = firstDecl; cur != null; cur = cur.nextDecl)
+			cur.printTree();
 	}
 
 	void addDecl(Declaration d) {
 		if(firstDecl == null) {
 			firstDecl = d;
 		} else {
-			d.nextDecl = firstDecl;
-			firstDecl = d;
+			Declaration putDecl = firstDecl;
+			while(putDecl.nextDecl != null)
+				putDecl = putDecl.nextDecl;
+			putDecl.nextDecl = d;
 		}
 	}
 
@@ -245,7 +266,7 @@ class GlobalDeclList extends DeclList {
 		
 		while (Scanner.curToken == intToken) {
 			DeclType ts = DeclType.parse();
-			gdl.addDecl(Declaration.parse(ts));
+			gdl.addDecl(Declaration.parse(ts, true));
 		}
 		return gdl;
 	}
@@ -267,10 +288,8 @@ class LocalDeclList extends DeclList {
 		
 		while(Scanner.curToken == Token.intToken) {
 			DeclType dt = DeclType.parse();
-			Declaration d = Declaration.parse(dt);
+			Declaration d = Declaration.parse(dt, false);
 			list.addDecl(d);
-			
-			Scanner.skip(Token.semicolonToken);
 			
 		}
 		return list;
@@ -298,19 +317,23 @@ class ParamDeclList extends DeclList {
 		
 		while(Scanner.curToken != Token.rightParToken) {
 			
-			
 			DeclType dt = DeclType.parse();
 			
 			ParamDecl pd = ParamDecl.parse(dt);
 			
+			pd.typeSpec = dt;
+			
 			list.addDecl(pd);
 			
-			if(Scanner.curToken == commaToken)
+			if(Scanner.curToken == commaToken) {
+				if(Scanner.nextToken == Token.rightParToken)
+					Error.expected("An operand");
 				Scanner.readNext();
+			}
 		}
 		
 		Scanner.readNext();
-		return null;
+		return list;
 	}
 
 	@Override
@@ -384,13 +407,16 @@ abstract class Declaration extends SyntaxUnit {
 
 	abstract int declSize();
 
-	static Declaration parse(DeclType dt) {
+	static Declaration parse(DeclType dt, boolean isGlobal) {
 		Declaration d = null;
+		
+		if(dt == null) Error.error("dt er null");
 		
 		if (Scanner.curToken == nameToken && Scanner.nextToken == leftParToken) {
 			d = FuncDecl.parse(dt);
 		} else if (Scanner.curToken == nameToken) {
-			d = GlobalVarDecl.parse(dt);
+			if(isGlobal) d = GlobalVarDecl.parse(dt);
+			else d = LocalVarDecl.parse(dt);
 		} else {
 			Error.expected("A declaration name");
 		}
@@ -454,7 +480,7 @@ abstract class VarDecl extends Declaration {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		typeSpec.printTree(); Log.wTreeLn(" " + name + ";");
 	}
 
 	@Override
@@ -504,6 +530,8 @@ class GlobalVarDecl extends VarDecl {
 			Scanner.skip(Token.rightBracketToken);
 		}
 		
+		Scanner.skip(Token.semicolonToken);
+		
 		Log.leaveParser("</var decl>");
 		
 		return var;
@@ -526,8 +554,25 @@ class LocalVarDecl extends VarDecl {
 	static LocalVarDecl parse(DeclType dt) {
 		Log.enterParser("<var decl>");
 
-		// -- Must be changed in part 1:
-		return null;
+		LocalVarDecl var = new LocalVarDecl(Scanner.curName);
+		
+		Scanner.skip(Token.nameToken);
+		
+		if(Scanner.curToken == Token.leftBracketToken) {
+			var.isArray = true;
+			Scanner.readNext();
+			
+			var.numElems = Scanner.curNum;
+			
+			Scanner.skip(Token.numberToken);
+			Scanner.skip(Token.rightBracketToken);
+		}
+		
+		Scanner.skip(Token.semicolonToken);
+		
+		Log.leaveParser("</var decl>");
+		
+		return var;
 	}
 }
 
@@ -558,13 +603,12 @@ class ParamDecl extends VarDecl {
 		Scanner.skip(nameToken);
 		Log.leaveParser("</param decl>");
 		
-		
 		return pd;
 	}
 
 	@Override
 	void printTree() {
-		typeSpec.printTree();
+		this.typeSpec.printTree();
 		Log.wTree(" " + name);
 	}
 }
@@ -583,7 +627,6 @@ class FuncDecl extends Declaration {
 
 		super(n);
 		assemblerName = (AlboC.underscoredGlobals() ? "_" : "") + n;
-		// -- Must be changed in part 1:
 	}
 
 	@Override
@@ -621,7 +664,7 @@ class FuncDecl extends Declaration {
 		if(ts.type == Types.intType) {
 			decl.exitLabel = "int";
 		} else {
-			Error.error(Scanner.nextLine, "Int Expected, But found a " + ts.type.toString());
+			Error.expected("int");
 		}
 		
 		Scanner.skip(Token.leftCurlToken);
@@ -642,7 +685,15 @@ class FuncDecl extends Declaration {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		Log.wTree(exitLabel + " " + name);
+		Log.wTree("("); funcParams.printTree(); Log.wTreeLn(")");
+		Log.wTreeLn("{");
+		Log.indentTree();
+		lList.printTree();
+		Log.wTreeLn();
+		sList.printTree();
+		Log.outdentTree();
+		Log.wTreeLn("}");
 	}
 }
 
@@ -664,8 +715,7 @@ class Assignment extends SyntaxUnit {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
-		
+		var.printTree(); Log.wTree(" = "); expr.printTree();
 	}
 	
 	static Assignment parse() {
@@ -702,8 +752,10 @@ class StatmList extends SyntaxUnit {
 		if(firstStatm == null)
 			firstStatm = st;
 		else {
-			st.nextStatm = firstStatm;
-			firstStatm = st;
+			Statement putStatm = firstStatm;
+			while(putStatm.nextStatm != null)
+				putStatm = putStatm.nextStatm;
+			putStatm.nextStatm = st;
 		}
 	}
 	
@@ -721,11 +773,9 @@ class StatmList extends SyntaxUnit {
 		Log.enterParser("<statm list>");
 		
 		StatmList sl = new StatmList();
-		//Statement lastStatm = null;
-		while (Scanner.curToken != rightCurlToken) {
+		while (Scanner.curToken != Token.rightCurlToken) {
 			Statement st = Statement.parse();
 			sl.addStatement(st);
-			Scanner.readNext();
 		}
 
 		Log.leaveParser("</statm list>");
@@ -734,7 +784,9 @@ class StatmList extends SyntaxUnit {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		for(Statement cur = firstStatm; cur != null; cur = cur.nextStatm) {
+			cur.printTree();
+		}
 	}
 }
 
@@ -794,8 +846,7 @@ class CallStatm extends Statement {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
-		
+		fnc.printTree(); Log.wTreeLn(";");
 	}
 	
 	static CallStatm parse() {
@@ -804,6 +855,8 @@ class CallStatm extends Statement {
 		CallStatm st = new CallStatm();
 		
 		st.fnc = FunctionCall.parse();
+		
+		Scanner.skip(Token.semicolonToken);
 		
 		Log.leaveParser("</call-statm>");
 		
@@ -816,7 +869,7 @@ class CallStatm extends Statement {
  * An <empty statm>.
  */
 class EmptyStatm extends Statement {
-	// -- Must be changed in part 1+2:
+	// -- Must be changed in part 2:
 
 	@Override
 	void check(DeclList curDecls) {
@@ -829,12 +882,15 @@ class EmptyStatm extends Statement {
 	}
 
 	static EmptyStatm parse() {
+		Log.enterParser("<empty-statm>");
+		Scanner.skip(Token.semicolonToken);
+		Log.leaveParser("</empty-statm>");
 		return new EmptyStatm();
 	}
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		Log.wTreeLn(";");
 	}
 }
 
@@ -860,7 +916,7 @@ class AssignStatm extends Statement {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
+		asn.printTree(); Log.wTreeLn(";");
 		
 	}
 	
@@ -871,7 +927,7 @@ class AssignStatm extends Statement {
 		
 		asnstm.asn = Assignment.parse();
 		
-		Scanner.check(Token.semicolonToken);
+		Scanner.skip(Token.semicolonToken);
 		
 		Log.leaveParser("</assign-statm>");
 		
@@ -910,6 +966,12 @@ class ForStatm extends Statement {
 			return fc;
 			
 		}
+		
+		void printTree() {
+			init.printTree(); Log.wTree("; ");
+			cond.printTree(); Log.wTree("; ");
+			incdec.printTree();
+		}
 	}
 	
 	@Override
@@ -926,8 +988,10 @@ class ForStatm extends Statement {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
-		
+		Log.wTree("for("); fc.printTree(); Log.wTreeLn(") {");
+		Log.indentTree();
+		list.printTree();
+		Log.outdentTree(); Log.wTreeLn("}");
 	}
 	
 	static ForStatm parse() {
@@ -942,7 +1006,7 @@ class ForStatm extends Statement {
 		
 		Scanner.skip(Token.leftCurlToken);
 		st.list = StatmList.parse();
-		
+		Scanner.skip(Token.rightCurlToken);
 		Log.leaveParser("</for-statm>");
 		
 		return st;
@@ -968,10 +1032,15 @@ class IfStatm extends Statement {
 			
 			Scanner.skip(Token.leftCurlToken);
 			ep.list = StatmList.parse();
+			Scanner.skip(Token.rightCurlToken);
 			
 			Log.leaveParser("</else-part>");
 			
 			return ep;
+		}
+		
+		void printTree() {
+			list.printTree();
 		}
 	}
 	
@@ -1011,7 +1080,16 @@ class IfStatm extends Statement {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		Log.wTree("if("); test.printTree(); Log.wTreeLn(") {");
+		Log.indentTree();
+		list.printTree();
+		Log.outdentTree(); Log.wTreeLn("}");
+		if(elsep != null) {
+			Log.wTreeLn("else {");
+			Log.indentTree();
+			elsep.printTree();
+			Log.outdentTree(); Log.wTreeLn("}");
+		}
 	}
 }
 
@@ -1029,7 +1107,9 @@ class ReturnStatm extends Statement {
 		Scanner.readNext();
 		
 		ret.expr = Expression.parse();
-			
+		
+		Scanner.skip(Token.semicolonToken);
+		
 		Log.leaveParser("</return-statm>");
 		
 		return ret;
@@ -1049,8 +1129,7 @@ class ReturnStatm extends Statement {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
-		
+		Log.wTree("return "); expr.printTree(); Log.wTreeLn(";");
 	}
 }
 
@@ -1093,14 +1172,17 @@ class WhileStatm extends Statement {
 
 		WhileStatm ws = new WhileStatm();
 		Scanner.skip(whileToken);
+		
 		Scanner.skip(leftParToken);
 		ws.test = Expression.parse();
 		Scanner.skip(rightParToken);
+		
 		Scanner.skip(leftCurlToken);
 		ws.body = StatmList.parse();
 		Scanner.skip(rightCurlToken);
 
 		Log.leaveParser("</while-statm>");
+		
 		return ws;
 	}
 
@@ -1193,8 +1275,13 @@ class ExprList extends SyntaxUnit {
 		while(Scanner.curToken != Token.rightParToken) {
 			Expression expr = Expression.parse();
 			exList.list.add(expr);
-			if(Scanner.curToken == Token.commaToken)
+			if(Scanner.curToken == commaToken) {
+				if(Scanner.nextToken == Token.rightParToken)
+					Error.expected("An operand");
 				Scanner.readNext();
+				continue;
+			}
+			Scanner.check(Token.rightParToken);
 		}
 		
 		Log.leaveParser("</expr list>");
@@ -1203,9 +1290,15 @@ class ExprList extends SyntaxUnit {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		GenericIt<Expression> iter = list.iterator();
+		
+		while(iter.hasNext()) {
+			Expression e = iter.next();
+			e.printTree();
+			if(iter.hasNext())
+				Log.wTree(", ");
+		}
 	}
-	// -- Must be changed in part 1:
 }
 
 /*
@@ -1243,7 +1336,10 @@ class Expression extends SyntaxUnit {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		firstTerm.printTree();
+		if(relOpr != null) {
+			relOpr.printTree(); secondTerm.printTree();
+		}
 	}
 }
 
@@ -1251,7 +1347,7 @@ class Expression extends SyntaxUnit {
  * A <term>
  */
 class Term extends SyntaxUnit {
-	// -- Must be changed in part 1+2:
+	// -- Must be changed in part 2:
 
 	GenericList<Pair<Factor, TermOpr>> list = new GenericList<Pair<Factor, TermOpr>>();
 	
@@ -1282,16 +1378,20 @@ class Term extends SyntaxUnit {
 			Factor fak = Factor.parse();
 			
 			t.list.add(new Pair<Factor, TermOpr>(fak, null));
-			
 		}
 		
 		Log.leaveParser("</term>");
-		return null;
+		return t;
 	}
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		GenericIt<Pair<Factor, TermOpr>> it = list.iterator();
+		while(it.hasNext()) {
+			Pair<Factor, TermOpr> cur = it.next();
+			cur.first.printTree();
+			if(cur.second != null) cur.second.printTree();
+		}
 	}
 }
 
@@ -1317,8 +1417,12 @@ class Factor extends SyntaxUnit {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
-		
+		GenericIt<Pair<Primary, FacOpr>> it = list.iterator();
+		while(it.hasNext()) {
+			Pair<Primary, FacOpr> cur = it.next();
+			cur.first.printTree();
+			if(cur.second != null) cur.second.printTree();
+		}
 	}
 	
 	static Factor parse() {
@@ -1372,8 +1476,9 @@ class Primary extends SyntaxUnit {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
-		
+		if(prefix == Token.starToken) Log.wTree("*");
+		else if (prefix == Token.subtractToken) Log.wTree("-");
+		op.printTree();
 	}
 	
 	static Primary parse() {
@@ -1434,8 +1539,8 @@ class FacOpr extends Operator {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
-		
+		if(oprToken == Token.starToken) Log.wTree(" * ");
+		else Log.wTree(" / ");
 	}
 	
 }
@@ -1463,8 +1568,8 @@ class TermOpr extends Operator {
 
 	@Override
 	void printTree() {
-		// TODO Auto-generated method stub
-		
+		if(oprToken == Token.subtractToken) Log.wTree(" - ");
+		else Log.wTree(" + ");
 	}
 	
 }
@@ -1575,7 +1680,7 @@ abstract class Operand extends SyntaxUnit {
  * A <function call>.
  */
 class FunctionCall extends Operand {
-	// -- Must be changed in part 1+2:
+	// -- Must be changed in part 2:
 	
 	String name;
 	ExprList list;
@@ -1608,9 +1713,9 @@ class FunctionCall extends Operand {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		Log.wTree(name + "("); list.printTree(); Log.wTree(")");
 	}
-	// -- Must be changed in part 1+2:
+	// -- Must be changed in part 2:
 }
 
 /*
@@ -1728,7 +1833,10 @@ class Variable extends Operand {
 
 	@Override
 	void printTree() {
-		// -- Must be changed in part 1:
+		Log.wTree(varName);
+		if(index != null) {
+			Log.wTree("["); index.printTree(); Log.wTree("]");
+		}
 	}
 }
 

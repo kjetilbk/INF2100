@@ -49,12 +49,17 @@ public class Scanner {
 				if(!CharGenerator.isMoreToRead()) {
 					token = eofToken;
 				}
+
+				/*
+				 * Read tokens from CharGenerator and skip /* comments
+				 */
+
 				if(token == null) token = Token.checkSingleCharToken(CharGenerator.curC);
 				if(token == null) token = Token.checkDoubleCharToken(CharGenerator.curC, CharGenerator.nextC);
 				if(token == Token.startCommentToken) {
 					CharGenerator.readNext();
 					while(true) {
-						try {
+						try { // Try reading to the first end-comment characters. If CharGenerator can't read more, an exception will be caught.
 							CharGenerator.readNext();
 							if(CharGenerator.curC == '*' && CharGenerator.nextC == '/') {
 								CharGenerator.readNext();
@@ -67,7 +72,7 @@ public class Scanner {
 						}
 					}
 					nextLine = CharGenerator.curLineNum();
-					continue;
+					continue; // restart parsing of tokens after the comment ends
 				}
 				if(		token == Token.equalToken || 
 						token == Token.greaterEqualToken || 
@@ -76,26 +81,36 @@ public class Scanner {
 				{
 					CharGenerator.readNext();
 				}
-				if(isLetterAZ(CharGenerator.curC) || isValidNameChar(CharGenerator.curC)) {
+				if(isLetterAZ(CharGenerator.curC)) { 
+					/*
+					 * A name may not start with a digit or an underscore,
+					 * however it may contain digits and/or underscores after its first character.
+					 */
 					String name = "";
-					while(isLetterAZ(CharGenerator.curC) || isValidNameChar(CharGenerator.curC)) {
+					while(isLetterAZ(CharGenerator.curC) || isValidNameChar(CharGenerator.curC) || isDigit(CharGenerator.curC)) {
 						name += CharGenerator.curC;
 						CharGenerator.readNext();
 					}
 					nextName = name;
-					token = Token.checkStringToken(name);
+					token = Token.checkStringToken(name); // Check for special tokens like if, for etc.
 				}
 				else if(CharGenerator.curC == '\'') {
+					/*
+					 * Read characters enclosed in single-quotes
+					 */
+					CharGenerator.readNext();
+					if(CharGenerator.nextC == '\'') {
+						nextNum = (int)CharGenerator.curC;
+						token = Token.numberToken;
 						CharGenerator.readNext();
-						if(CharGenerator.nextC == '\'') {
-							nextNum = (int)CharGenerator.curC;
-							token = Token.numberToken;
-							CharGenerator.readNext();
-							CharGenerator.readNext();
-						} else {
-							Error.error(curLine, "Illegal character constant");
-						}
+						CharGenerator.readNext();
+					} else {
+						Error.error(curLine, "Illegal character constant");
+					}
 				} else if(isDigit(CharGenerator.curC)) {
+					/*
+					 * Read a whole number
+					 */
 					String num = "";
 					while(isDigit(CharGenerator.curC)) {
 						num += CharGenerator.curC;
@@ -103,11 +118,12 @@ public class Scanner {
 					}
 					nextNum = Integer.parseInt(num);
 					token = Token.numberToken;
-				} else if (token != null && CharGenerator.isMoreToRead()) CharGenerator.readNext();
+				} else if (token != null && CharGenerator.isMoreToRead())
+					CharGenerator.readNext(); // If there is one, read the next character
 				if(token == null)
 					Error.error(nextLine, "Illegal symbol: '" + CharGenerator.curC
 							+ "'!");
-				
+
 				nextToken = token;
 			}
 		}
@@ -117,11 +133,11 @@ public class Scanner {
 	private static boolean isDigit(char c) {
 		return (c >= '0' && c <= '9');
 	}
-	
+
 	private static boolean isLetterAZ(char c) {
 		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 	}
-	
+
 	private static boolean isValidNameChar(char c) {
 		switch(c) {
 		case '_':

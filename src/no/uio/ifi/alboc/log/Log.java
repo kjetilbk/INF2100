@@ -28,7 +28,6 @@ public class Log {
 	}
 
 	public static void finish() {
-		// -- Must be changed in part 0:
 	}
 
 	private static void writeLogLine(String data) {
@@ -166,10 +165,10 @@ public class Log {
 	}
 
 	public static void indentTree() {
-		// -- Must be changed in part 1:
+		treeLevel++;
 	}
 
 	public static void outdentTree() {
-		// -- Must be changed in part 1:
+		if(treeLevel > 0) treeLevel--;
 	}
 }

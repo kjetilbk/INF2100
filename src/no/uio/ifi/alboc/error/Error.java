@@ -35,15 +35,13 @@ public class Error {
 	}
 
 	public static void init() {
-		// -- Must be changed in part 0:
 	}
 
 	public static void finish() {
-		// -- Must be changed in part 0:
 	}
 
 	public static void expected(String exp) {
 		error(Scanner.curLine, exp + " expected, but found a "
-				+ Scanner.curToken + ": " + Scanner.curName + "!");
+				+ Scanner.curToken + "!");
 	}
 }
