@@ -223,6 +223,7 @@ abstract class DeclList extends SyntaxUnit {
 	}
 
 	void addDecl(Declaration d) {
+		d.check(this);
 		if(firstDecl == null) {
 			firstDecl = d;
 		} else {
@@ -245,7 +246,14 @@ abstract class DeclList extends SyntaxUnit {
 	}
 
 	Declaration findDecl(String name, SyntaxUnit use) {
-		// -- Must be changed in part 2:
+		DeclList curList = this;
+		while(curList != null) {
+			for(Declaration decl = curList.firstDecl; decl != null; decl = decl.nextDecl)
+				if(decl.name.equals(name))
+					return decl;
+			curList = curList.outerScope;
+		}
+		use.error("Could not find declaration " + name + "!");
 		return null;
 	}
 }
@@ -380,6 +388,7 @@ class DeclType extends SyntaxUnit {
 		Log.leaveParser("</type>");
 		
 		dt.check(null);
+		
 		return dt;
 	}
 
@@ -407,6 +416,20 @@ abstract class Declaration extends SyntaxUnit {
 
 	abstract int declSize();
 
+	static boolean checkName(DeclList curDecls, Declaration curDecl) {
+		Declaration cur = curDecls.firstDecl;
+		while(cur != null) {
+			if(cur == curDecl) {
+				cur = cur.nextDecl;
+				continue;
+			}
+			if(curDecl.name.equals(cur.name))
+				return false;
+			cur = cur.nextDecl;
+		}
+		return true;
+	}
+	
 	static Declaration parse(DeclType dt, boolean isGlobal) {
 		Declaration d = null;
 		
@@ -475,7 +498,16 @@ abstract class VarDecl extends Declaration {
 
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+		Declaration cur = curDecls.firstDecl;
+		while(cur != null) {
+			if(cur == this) {
+				cur = cur.nextDecl;
+				continue;
+			}
+			if(this.name.equals(cur.name))
+				Error.error(lineNum, "Name " + cur.name + " already declared!");
+			cur = cur.nextDecl;
+		}
 	}
 
 	@Override
@@ -636,17 +668,22 @@ class FuncDecl extends Declaration {
 
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+		if(!Declaration.checkName(curDecls, this))
+			Error.error(this.lineNum, " Function " + name + " already declared!");
+		
+		funcParams.check(curDecls);
+		lList.check(funcParams);
+		sList.check(lList);
 	}
 
 	@Override
 	void checkWhetherFunction(int nParamsUsed, SyntaxUnit use) {
-		// -- Must be changed in part 2:
+		// ok!
 	}
 
 	@Override
 	void checkWhetherVariable(SyntaxUnit use) {
-		// -- Must be changed in part 2:
+		use.error(name + " Is not a variable!");
 	}
 
 	@Override
@@ -703,8 +740,8 @@ class Assignment extends SyntaxUnit {
 	Expression expr = null;
 	@Override
 	void check(DeclList curDecls) {
-		// TODO Auto-generated method stub
-		
+		var.check(curDecls);
+		expr.check(curDecls);
 	}
 
 	@Override
@@ -761,7 +798,8 @@ class StatmList extends SyntaxUnit {
 	
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+		for(Statement statm = firstStatm; statm != null; statm = statm.nextStatm)
+			statm.check(curDecls);
 	}
 
 	@Override
@@ -834,7 +872,8 @@ class CallStatm extends Statement {
 	
 	@Override
 	void check(DeclList curDecls) {
-		// TODO Auto-generated method stub
+
+		System.err.println("Check " + this.toString());
 		
 	}
 
@@ -873,7 +912,8 @@ class EmptyStatm extends Statement {
 
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+
+		System.err.println("Check " + this.toString());
 	}
 
 	@Override
@@ -904,7 +944,8 @@ class AssignStatm extends Statement {
 	
 	@Override
 	void check(DeclList curDecls) {
-		// TODO Auto-generated method stub
+		
+		asn.check(curDecls);
 		
 	}
 
@@ -976,7 +1017,8 @@ class ForStatm extends Statement {
 	
 	@Override
 	void check(DeclList curDecls) {
-		// TODO Auto-generated method stub
+
+		System.err.println("Check " + this.toString());
 		
 	}
 
@@ -1046,7 +1088,8 @@ class IfStatm extends Statement {
 	
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+
+		System.err.println("Check " + this.toString());
 	}
 
 	@Override
@@ -1258,7 +1301,8 @@ class ExprList extends SyntaxUnit {
 
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+
+		System.err.println("Check " + this.toString());
 	}
 
 	@Override
@@ -1312,7 +1356,14 @@ class Expression extends SyntaxUnit {
 
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+		firstTerm.check(curDecls);
+		if(relOpr != null) {
+			secondTerm.check(curDecls);
+			relOpr.check(curDecls);
+		}
+		
+		if(nextExpr != null)
+			nextExpr.check(curDecls);
 	}
 
 	@Override
@@ -1322,7 +1373,7 @@ class Expression extends SyntaxUnit {
 
 	static Expression parse() {
 		Log.enterParser("<expression>");
-
+		
 		Expression e = new Expression();
 		e.firstTerm = Term.parse();
 		if (Token.isRelOperator(Scanner.curToken)) {
@@ -1347,13 +1398,30 @@ class Expression extends SyntaxUnit {
  * A <term>
  */
 class Term extends SyntaxUnit {
-	// -- Must be changed in part 2:
+	Type getType() {
+		
+	}
 
 	GenericList<Pair<Factor, TermOpr>> list = new GenericList<Pair<Factor, TermOpr>>();
 	
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+		GenericIt<Pair<Factor, TermOpr>> it = list.iterator();
+		
+		Type checkType = null;
+		
+		while(it.hasNext()) {
+			Pair<Factor, TermOpr> p = it.next();
+			
+			p.first.check(curDecls);
+			if(checkType == null)
+				checkType = p.first.getType();
+			else
+				if(p.first.getType() != checkType);
+			
+			if(p.second != null)
+				p.second.check(curDecls);
+		}
 	}
 
 	@Override
@@ -1405,8 +1473,14 @@ class Factor extends SyntaxUnit {
 	
 	@Override
 	void check(DeclList curDecls) {
-		// TODO Auto-generated method stub
-		
+		GenericIt<Pair<Primary, FacOpr>> it = list.iterator();
+		while(it.hasNext()) {
+			Pair<Primary, FacOpr> p = it.next();
+			
+			p.first.check(curDecls);
+			if(p.second != null)
+				p.second.check(curDecls);
+		}
 	}
 
 	@Override
@@ -1464,8 +1538,7 @@ class Primary extends SyntaxUnit {
 	
 	@Override
 	void check(DeclList curDecls) {
-		// TODO Auto-generated method stub
-		
+		op.check(curDecls);
 	}
 
 	@Override
@@ -1687,7 +1760,8 @@ class FunctionCall extends Operand {
 
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+
+		System.err.println("Check " + this.toString());
 	}
 
 	@Override
@@ -1726,7 +1800,7 @@ class Number extends Operand {
 
 	@Override
 	void check(DeclList curDecls) {
-		// -- Must be changed in part 2:
+		System.err.println("Check " + this.toString());
 	}
 
 	@Override

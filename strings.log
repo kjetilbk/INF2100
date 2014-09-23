@@ -1,0 +1,3 @@
+Checking types: Line 22: a[e],
+                where Type(a) is null and Type(e) is null
+AlboC error in line 22: Only integers may be used as index.
