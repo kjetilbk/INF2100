@@ -23,8 +23,46 @@ public class Syntax {
 	static DeclList library;
 	static Program program;
 
+	public static FuncDecl genFuncDecl(String signature) {
+
+		int prtIndex = signature.indexOf('(');
+		
+		String name = signature.substring(0, prtIndex);
+		String param = signature.substring(++prtIndex, signature.length()-1);
+
+		FuncDecl fd = new FuncDecl(name);
+		
+		String [] params = param.split(",");
+		
+		fd.funcParams = new ParamDeclList();
+		
+		if(param.equals(""))
+			return fd;
+		
+		for (String s : params) {
+			String [] var = s.split("\\s");
+			ParamDecl pd = new ParamDecl(var[1]);
+			DeclType dt = new DeclType();
+			dt.numStars = 0;
+			dt.check(null);
+			pd.typeSpec = dt;
+			pd.isArray = false;
+			fd.funcParams.addDecl(fd);
+		}
+		
+		return fd;
+	}
+	
 	public static void init() {
-		// -- Must be changed in part 2:
+		// TODO Fiks library
+		
+		library = new GlobalDeclList();
+		library.addDecl(genFuncDecl("putchar(int char)"));
+		library.addDecl(genFuncDecl("putint(int char)"));
+		library.addDecl(genFuncDecl("getchar()"));
+		library.addDecl(genFuncDecl("getint()"));
+		library.addDecl(genFuncDecl("exit(int code)"));
+		
 	}
 
 	public static void finish() {
@@ -223,7 +261,7 @@ abstract class DeclList extends SyntaxUnit {
 	}
 
 	void addDecl(Declaration d) {
-		d.check(this);
+		//d.check(this);
 		if(firstDecl == null) {
 			firstDecl = d;
 		} else {
@@ -435,14 +473,15 @@ abstract class Declaration extends SyntaxUnit {
 		
 		if(dt == null) Error.error("dt er null");
 		
-		if (Scanner.curToken == nameToken && Scanner.nextToken == leftParToken) {
+		if (Scanner.curToken == Token.nameToken && Scanner.nextToken == Token.leftParToken) {
 			d = FuncDecl.parse(dt);
-		} else if (Scanner.curToken == nameToken) {
+		} else if (Scanner.curToken == Token.nameToken) {
 			if(isGlobal) d = GlobalVarDecl.parse(dt);
 			else d = LocalVarDecl.parse(dt);
 		} else {
 			Error.expected("A declaration name");
 		}
+		d.type = dt.type;
 		d.typeSpec = dt;
 		return d;
 	}
@@ -499,6 +538,10 @@ abstract class VarDecl extends Declaration {
 	@Override
 	void check(DeclList curDecls) {
 		Declaration cur = curDecls.firstDecl;
+		if(isArray)
+			type = new ArrayType(Types.intType, numElems);
+		else
+			type = Types.intType;
 		while(cur != null) {
 			if(cur == this) {
 				cur = cur.nextDecl;
@@ -873,7 +916,7 @@ class CallStatm extends Statement {
 	@Override
 	void check(DeclList curDecls) {
 
-		System.err.println("Check " + this.toString());
+		fnc.check(curDecls);
 		
 	}
 
@@ -912,8 +955,7 @@ class EmptyStatm extends Statement {
 
 	@Override
 	void check(DeclList curDecls) {
-
-		System.err.println("Check " + this.toString());
+		// OK
 	}
 
 	@Override
@@ -1013,13 +1055,18 @@ class ForStatm extends Statement {
 			cond.printTree(); Log.wTree("; ");
 			incdec.printTree();
 		}
+		
+		void check(DeclList curDecls) {
+			init.check(curDecls);
+			incdec.check(curDecls);
+			cond.check(curDecls);
+		}
 	}
 	
 	@Override
 	void check(DeclList curDecls) {
-
-		System.err.println("Check " + this.toString());
-		
+		fc.check(curDecls);
+		list.check(curDecls);
 	}
 
 	@Override
@@ -1084,12 +1131,19 @@ class IfStatm extends Statement {
 		void printTree() {
 			list.printTree();
 		}
+		
+		void check(DeclList curDecls) {
+			list.check(curDecls);
+		}
 	}
 	
 	@Override
 	void check(DeclList curDecls) {
-
-		System.err.println("Check " + this.toString());
+		test.check(curDecls);
+		list.check(curDecls);
+		if(elsep != null)
+			elsep.check(curDecls);
+		
 	}
 
 	@Override
@@ -1362,6 +1416,8 @@ class Expression extends SyntaxUnit {
 			relOpr.check(curDecls);
 		}
 		
+		type = firstTerm.getType();
+		
 		if(nextExpr != null)
 			nextExpr.check(curDecls);
 	}
@@ -1399,7 +1455,9 @@ class Expression extends SyntaxUnit {
  */
 class Term extends SyntaxUnit {
 	Type getType() {
-		
+		if(list.size() > 0)
+			return list.first.data.first.getType();
+		return null;
 	}
 
 	GenericList<Pair<Factor, TermOpr>> list = new GenericList<Pair<Factor, TermOpr>>();
@@ -1469,6 +1527,12 @@ class Term extends SyntaxUnit {
 
 class Factor extends SyntaxUnit {
 	
+	Type getType() {
+		if(list.size() > 0)
+			return list.first.data.first.getType();
+		return null;
+	}
+	
     private GenericList<Pair<Primary, FacOpr>> list = new GenericList<Pair<Primary, FacOpr>>();
 	
 	@Override
@@ -1533,6 +1597,12 @@ class Factor extends SyntaxUnit {
 
 class Primary extends SyntaxUnit {
 
+	Type getType() {
+		if(prefix == Token.starToken)
+			return new PointerType(op.type);
+		return op.type;
+	}
+	
 	Token prefix = null;
 	Operand op = null;
 	
@@ -1760,8 +1830,9 @@ class FunctionCall extends Operand {
 
 	@Override
 	void check(DeclList curDecls) {
-
-		System.err.println("Check " + this.toString());
+		Declaration d = curDecls.findDecl(name, this);
+		
+		this.type = d.type;
 	}
 
 	@Override
@@ -1800,7 +1871,7 @@ class Number extends Operand {
 
 	@Override
 	void check(DeclList curDecls) {
-		System.err.println("Check " + this.toString());
+		//ok
 	}
 
 	@Override
@@ -1812,10 +1883,10 @@ class Number extends Operand {
 		Log.enterParser("<number>");
 		
 		Number n = new Number();
-		
 		n.numVal = Scanner.curNum;
-		
 		Scanner.skip(Token.numberToken);
+		
+		n.type = Types.intType;
 		
 		Log.leaveParser("</number>");
 		
@@ -1842,6 +1913,8 @@ class Variable extends Operand {
 		Declaration d = curDecls.findDecl(varName, this);
 		d.checkWhetherVariable(this);
 		declRef = (VarDecl) d;
+		
+		type = declRef.type;
 
 		if (index == null) {
 			type = d.type;
@@ -1899,7 +1972,7 @@ class Variable extends Operand {
 			var.index = Expression.parse();
 			Scanner.skip(rightBracketToken);
 		}
-
+		
 		Log.leaveParser("</variable>");
 		
 		return var;
