@@ -171,7 +171,7 @@ class Pair <_Ty1, _Ty2> {
 class GenericNode<_Ty> {
 	_Ty data;
 	
-	GenericNode<_Ty> next;
+	GenericNode<_Ty> next, prev;
 }
 
 /**
@@ -194,6 +194,19 @@ class GenericIt<_Ty> {
 	}
 	
 	GenericIt(GenericNode<_Ty> n) {cur = n;}
+}
+class GenericRevIt<_Ty> {
+	GenericNode<_Ty> cur;
+	
+	boolean hasNext() {return cur != null;}
+	
+	_Ty next() {
+		_Ty ret = cur.data;
+		cur = cur.prev;
+		return ret;
+	}
+	
+	GenericRevIt(GenericNode<_Ty> n) {cur = n;}
 }
 
 /**
@@ -223,6 +236,7 @@ class GenericList<_Ty> {
 			last = first;
 		} else {
 			last.next = node;
+			node.prev = last;
 			last = last.next;
 		}
 		_size++;
@@ -230,6 +244,7 @@ class GenericList<_Ty> {
 	}
 	
 	GenericIt<_Ty> iterator() {return new GenericIt<_Ty>(first);}
+	GenericRevIt<_Ty> reverseIterator() {return new GenericRevIt<_Ty>(last);}
 	
 }
 /*
@@ -243,6 +258,16 @@ abstract class DeclList extends SyntaxUnit {
 		
 	}
 
+	int indexOf(Declaration d) {
+		int curInd = 0;
+		for(Declaration cur = firstDecl; cur != null; cur = cur.nextDecl) {
+			if(cur == d) 
+				return curInd + d.declSize();
+			curInd += cur.declSize();
+		}
+		return -1;
+	}
+	
 	@Override
 	void check(DeclList curDecls) {
 		outerScope = curDecls;
@@ -303,7 +328,9 @@ abstract class DeclList extends SyntaxUnit {
 class GlobalDeclList extends DeclList {
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		for(Declaration d = firstDecl; d != null; d = d.nextDecl) {
+			d.genCode(curFunc);
+		}
 	}
 
 	static GlobalDeclList parse() {
@@ -325,7 +352,7 @@ class GlobalDeclList extends DeclList {
 class LocalDeclList extends DeclList {
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		// ok
 	}
 
 	static LocalDeclList parse() {
@@ -351,9 +378,9 @@ class ParamDeclList extends DeclList {
 	
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		System.err.println(this.toString() + " FIKS ME");
 	}
-
+	
 	static ParamDeclList parse() {
 		
 		ParamDeclList list = new ParamDeclList();
@@ -410,6 +437,7 @@ class DeclType extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
+		System.err.println(this.toString() + " FIKS ME");
 	}
 
 	static DeclType parse() {
@@ -541,7 +569,7 @@ abstract class VarDecl extends Declaration {
 		if(isArray)
 			type = new ArrayType(Types.intType, numElems);
 		else
-			type = Types.intType;
+			type = typeSpec.type;
 		while(cur != null) {
 			if(cur == this) {
 				cur = cur.nextDecl;
@@ -585,7 +613,7 @@ class GlobalVarDecl extends VarDecl {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		Code.genVar(this.assemblerName, true, (this.isArray ? this.numElems : 1), 4, "int" + (this.isArray ? "[] " : " ") + this.name);
 	}
 
 	static GlobalVarDecl parse(DeclType dt) {
@@ -623,7 +651,7 @@ class LocalVarDecl extends VarDecl {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		System.err.println(this.toString() + " FIKS ME");
 	}
 
 	static LocalVarDecl parse(DeclType dt) {
@@ -661,7 +689,7 @@ class ParamDecl extends VarDecl {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		// ok
 	}
 
 	static ParamDecl parse(DeclType dt) {
@@ -677,6 +705,8 @@ class ParamDecl extends VarDecl {
 
 		Scanner.skip(nameToken);
 		Log.leaveParser("</param decl>");
+
+		pd.typeSpec = dt;
 		
 		return pd;
 	}
@@ -719,6 +749,20 @@ class FuncDecl extends Declaration {
 		sList.check(lList);
 	}
 
+	String getVarLabel(Declaration d) {
+		int paramPos = funcParams.indexOf(d);
+		int localPos = lList.indexOf(d);
+		if(paramPos != -1) {
+			int stackPtr = paramPos + 4;
+			return stackPtr + "(%ebp)";
+		} else if (localPos != -1) {
+			int stackPtr = localPos * -1;
+			return stackPtr + "(%ebp)";
+		} else {
+			return d.name;
+		}
+	}
+	
 	@Override
 	void checkWhetherFunction(int nParamsUsed, SyntaxUnit use) {
 		// ok!
@@ -731,7 +775,13 @@ class FuncDecl extends Declaration {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		Code.genInstr("", ".globl " + this.name, "", "");
+		Code.genInstr(this.name, "enter", "$" + lList.dataSize() + ",$0", "Start function " + this.name);
+		lList.genCode(this);
+		sList.genCode(this);
+		Code.genInstr(".exit$" + this.name, "", "", "");
+		Code.genInstr("", "leave", "", "");
+		Code.genInstr("", "ret", "", "End function " + this.name);
 	}
 
 	static FuncDecl parse(DeclType ts) {
@@ -789,7 +839,14 @@ class Assignment extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
+		String lhsLabel = curFunc.getVarLabel(var.var.declRef);
+		var.var.genAddressCode(curFunc);
+		Code.genInstr("", "pushl", "%eax", "");
+		
+		expr.genCode(curFunc);
+
+		Code.genInstr("", "popl", "%edx", "");
+		Code.genInstr("", "movl", "%eax,(%edx)", "  =");
 		
 	}
 
@@ -847,7 +904,9 @@ class StatmList extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		for(Statement s = firstStatm; s != null; s = s.nextStatm) {
+			s.genCode(curFunc);
+		}
 	}
 
 	static StatmList parse() {
@@ -922,8 +981,7 @@ class CallStatm extends Statement {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
-		
+		fnc.genCode(curFunc);
 	}
 
 	@Override
@@ -960,7 +1018,6 @@ class EmptyStatm extends Statement {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
 	}
 
 	static EmptyStatm parse() {
@@ -993,7 +1050,7 @@ class AssignStatm extends Statement {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
+		asn.genCode(curFunc);
 		
 	}
 
@@ -1071,8 +1128,20 @@ class ForStatm extends Statement {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
+		String testLabel = Code.getLocalLabel();
+		String endLabel = Code.getLocalLabel();
+
+		Code.genInstr("", "", "", "Start for-statement");
 		
+		fc.init.genCode(curFunc);
+		Code.genInstr(testLabel, "", "", "");
+		fc.cond.genCode(curFunc);
+		Code.genInstr("", "cmpl", "$0,%eax", "");
+		Code.genInstr("", "je", endLabel, "");
+		list.genCode(curFunc);
+		fc.incdec.genCode(curFunc);
+		Code.genInstr("", "jmp", testLabel, "");
+		Code.genInstr(endLabel, "", "", "End for-statement");
 	}
 
 	@Override
@@ -1148,7 +1217,29 @@ class IfStatm extends Statement {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		String exitLabel = Code.getLocalLabel();
+		String elseLabel = (elsep != null ? Code.getLocalLabel() : null);
+		
+		Code.genInstr("", "", "", "Start if-statement");
+		
+		test.genCode(curFunc);
+
+		Code.genInstr("", "cmpl", "$0,%eax", "");
+		if(elseLabel != null) {
+			Code.genInstr("", "je", elseLabel, "");
+		} else {
+			Code.genInstr("", "je", exitLabel, "");
+		}
+		
+		list.genCode(curFunc);
+		
+		if(elsep != null) {
+			Code.genInstr("", "jmp", exitLabel, "");
+			Code.genInstr(elseLabel, "", "", "else-part");
+			elsep.list.genCode(curFunc);
+		}
+		Code.genInstr(exitLabel, "", "", "End if-statement");
+		
 	}
 
 	static IfStatm parse() {
@@ -1220,8 +1311,8 @@ class ReturnStatm extends Statement {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
-		
+		expr.genCode(curFunc);
+		Code.genInstr("", "jmp", ".exit$" + curFunc.name, "Return-statement");
 	}
 
 	@Override
@@ -1355,13 +1446,26 @@ class ExprList extends SyntaxUnit {
 
 	@Override
 	void check(DeclList curDecls) {
-
-		System.err.println("Check " + this.toString());
+		GenericIt<Expression> it = list.iterator();
+		
+		while(it.hasNext()) {
+			Expression e = it.next();
+			e.check(curDecls);
+		}
 	}
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		GenericRevIt<Expression> it = list.reverseIterator();
+		
+		int index = list.size();
+		
+		while(it.hasNext()) {
+			Expression e = it.next();
+			
+			e.genCode(curFunc);
+			Code.genInstr("", "pushl", "%eax", "Push parameter #" + index--);
+		}
 	}
 
 	static ExprList parse() {
@@ -1424,7 +1528,12 @@ class Expression extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		firstTerm.genCode(curFunc);
+		if(relOpr != null) {
+			Code.genInstr("", "pushl", "%eax", "");
+			secondTerm.genCode(curFunc);
+			relOpr.genCode(curFunc);
+		}
 	}
 
 	static Expression parse() {
@@ -1484,7 +1593,18 @@ class Term extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		GenericIt<Pair<Factor, TermOpr>> it = list.iterator();
+		
+		Pair<Factor, TermOpr> p = it.next();
+		p.first.genCode(curFunc);
+		
+		while(p.second != null) {
+			Code.genInstr("", "pushl", "%eax", "");
+			TermOpr operator = p.second;
+			p = it.next();
+			p.first.genCode(curFunc);
+			operator.genCode(curFunc);
+		}
 	}
 
 	static Term parse() {
@@ -1549,8 +1669,18 @@ class Factor extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
+		GenericIt<Pair<Primary, FacOpr>> it = list.iterator();
 		
+		Pair<Primary, FacOpr> p = it.next();
+		p.first.genCode(curFunc);
+		
+		while(p.second != null) {
+			Code.genInstr("", "pushl", "%eax", "");
+			FacOpr operator = p.second;
+			p = it.next();
+			p.first.genCode(curFunc);
+			operator.genCode(curFunc);
+		}
 	}
 
 	@Override
@@ -1613,8 +1743,16 @@ class Primary extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
-		
+		if(op instanceof Variable && ((Variable)op).declRef.isArray && ((Variable)op).index == null) {
+			((Variable)op).genAddressCode(curFunc);
+		} else {
+			op.genCode(curFunc);
+		}
+		if(prefix == Token.starToken) {
+			Code.genInstr("", "movl", "(%eax),%eax", "Compute *");
+		} else if (prefix == Token.subtractToken) {
+			Code.genInstr("", "negl", "%eax", "Compute -");
+		}
 	}
 
 	@Override
@@ -1663,8 +1801,14 @@ class FacOpr extends Operator {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
-		
+		Code.genInstr("", "movl", "%eax,%ecx", "");
+		Code.genInstr("", "popl", "%eax", "");
+		if(this.oprToken == Token.starToken) {
+			Code.genInstr("", "imull", "%ecx,%eax", "Compute *");
+		} else {
+			Code.genInstr("", "cdq", "", "");
+			Code.genInstr("", "idivl", "%ecx", "Compute /");
+		}
 	}
 	
 	static FacOpr parse() {
@@ -1692,8 +1836,13 @@ class TermOpr extends Operator {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// TODO Auto-generated method stub
-		
+		Code.genInstr("", "movl", "%eax,%ecx", "");
+		Code.genInstr("", "popl", "%eax", "");
+		if(this.oprToken == Token.addToken) {
+			Code.genInstr("", "addl", "%ecx,%eax", "Compute +");
+		} else {
+			Code.genInstr("", "subl", "%ecx,%eax", "Compute -");
+		}	
 	}
 	
 	static TermOpr parse() {
@@ -1831,13 +1980,17 @@ class FunctionCall extends Operand {
 	@Override
 	void check(DeclList curDecls) {
 		Declaration d = curDecls.findDecl(name, this);
-		
+		list.check(curDecls);
 		this.type = d.type;
 	}
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		list.genCode(curFunc);
+
+		Code.genInstr("", "call", this.name, "Call " + this.name);
+		if(list.list.size() > 0)
+			Code.genInstr("", "addl", "$" + list.list.size() * 4 + ",%esp", "Remove parameters");
 	}
 
 	static FunctionCall parse() {
@@ -1932,19 +2085,36 @@ class Variable extends Operand {
 			} else {
 				error("Only arrays and pointers may be indexed.");
 			}
-			type = d.type.getElemType();
 		}
 	}
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		// -- Must be changed in part 2:
+		declRef.assemblerName = curFunc.getVarLabel(declRef);
+		if (index == null) {
+			Code.genInstr("", "movl", declRef.assemblerName + ",%eax", varName);
+		} else {
+			index.genCode(curFunc);
+			if (declRef.type instanceof ArrayType) {
+				Code.genInstr("", "leal", declRef.assemblerName + ",%edx",
+						varName + "[...]");
+			} else {
+				Code.genInstr("", "movl", declRef.assemblerName + ",%edx",
+						varName + "[...]");
+			}
+			Code.genInstr("", "movl", "(%edx,%eax,4),%eax", "");
+		}
+		
+//		String label = curFunc.getVarLabel(declRef);
+//		Code.genInstr("", "movl", label + ",%eax", varName);
 	}
 
 	void genAddressCode(FuncDecl curFunc) {
 		// Generate code to load the _address_ of the variable
 		// rather than its value.
 
+		declRef.assemblerName = curFunc.getVarLabel(declRef);
+		
 		if (index == null) {
 			Code.genInstr("", "leal", declRef.assemblerName + ",%eax", varName);
 		} else {

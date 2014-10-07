@@ -1,0 +1,19 @@
+int x;
+
+int hei(int a) {
+
+	int *b;
+	int c;
+	int d;
+
+	x = 0;
+	d = a;
+	b = &a;
+	c = *b*2;
+	c = -4;
+	
+}
+
+int main() {
+	hei(1);
+}

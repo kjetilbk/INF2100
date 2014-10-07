@@ -3,8 +3,6 @@
    Computes Easter Sunday for the years 2010-2020. 
 */
 
-int putchar(int char) {return 0;}
-int putint(int integer) {return 0;}
 
 int mod (int x, int y)
 { /* Computes x%y */
