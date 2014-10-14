@@ -27,19 +27,29 @@ public class Syntax {
 
 		int prtIndex = signature.indexOf('(');
 		
-		String name = signature.substring(0, prtIndex);
-		String param = signature.substring(++prtIndex, signature.length()-1);
-
+		String []decl = signature.substring(0, prtIndex).split("\\s");
+		
+		String type = decl[0];
+		Type t = Types.intType;
+		for(int n = 0; n < type.length(); n++) {
+			if(type.charAt(n) == '*')
+				t = new PointerType(t);
+		}
+		String name = decl[1];
+		
 		FuncDecl fd = new FuncDecl(name);
 		
+		fd.type = t;
+
+		String param = signature.substring(++prtIndex, signature.length()-1);
 		String [] params = param.split(",");
-		
 		fd.funcParams = new ParamDeclList();
 		
 		if(param.equals(""))
 			return fd;
 		
 		for (String s : params) {
+			fd.funcParams.size(fd.funcParams.size()+1);
 			String [] var = s.split("\\s");
 			ParamDecl pd = new ParamDecl(var[1]);
 			DeclType dt = new DeclType();
@@ -57,12 +67,14 @@ public class Syntax {
 		// TODO Fiks library
 		
 		library = new GlobalDeclList();
-		library.addDecl(genFuncDecl("putchar(int char)"));
-		library.addDecl(genFuncDecl("putint(int char)"));
-		library.addDecl(genFuncDecl("getchar()"));
-		library.addDecl(genFuncDecl("getint()"));
-		library.addDecl(genFuncDecl("exit(int code)"));
-		
+		library.addDecl(genFuncDecl("int putchar(int char)"));
+		library.addDecl(genFuncDecl("int putint(int char)"));
+		library.addDecl(genFuncDecl("int getchar()"));
+		library.addDecl(genFuncDecl("int getint()"));
+		library.addDecl(genFuncDecl("int exit(int code)"));
+		library.addDecl(genFuncDecl("int str_len(int* str)"));
+		library.addDecl(genFuncDecl("int put_str(int* str)"));
+		library.addDecl(genFuncDecl("int* get_str()"));
 	}
 
 	public static void finish() {
@@ -119,8 +131,11 @@ class Program extends SyntaxUnit {
 		progDecls.check(curDecls);
 
 		if (!AlboC.noLink) {
-			// Check that 'main' has been declared properly:
-			// -- Must be changed in part 2:
+			Declaration main = progDecls.findDecl("main", this);
+			main.checkWhetherFunction(0, this);
+			if(main.type != Types.intType) {
+				this.error("Main function should be of type int!");
+			}
 		}
 	}
 
@@ -253,9 +268,8 @@ class GenericList<_Ty> {
 abstract class DeclList extends SyntaxUnit {
 	Declaration firstDecl = null;
 	DeclList outerScope;
-
+	
 	DeclList() {
-		
 	}
 
 	int indexOf(Declaration d) {
@@ -308,6 +322,14 @@ abstract class DeclList extends SyntaxUnit {
 		return res;
 	}
 
+	/**
+	 * Looper gjennom alle deklarasjoner for å finne deklarasjonen <name>.
+	 * Finner den ikke, sjekker den outerScope. etc.
+	 * 
+	 * @param name name of declaration you want.
+	 * @param use current SyntaxUnit(for error throwing).
+	 * @return the declaration you're looking for
+	 */
 	Declaration findDecl(String name, SyntaxUnit use) {
 		DeclList curList = this;
 		while(curList != null) {
@@ -374,8 +396,16 @@ class LocalDeclList extends DeclList {
  * diagrams.)
  */
 class ParamDeclList extends DeclList {
+	private int size = 0;
 	
+	public int size() {
+		return size;
+	}
 	
+	public void size(int size) {
+		this.size = size;
+	}
+
 	@Override
 	void genCode(FuncDecl curFunc) {
 		System.err.println(this.toString() + " FIKS ME");
@@ -389,6 +419,8 @@ class ParamDeclList extends DeclList {
 		Scanner.readNext();
 		
 		while(Scanner.curToken != Token.rightParToken) {
+			
+			list.size++;
 			
 			DeclType dt = DeclType.parse();
 			
@@ -565,6 +597,7 @@ abstract class VarDecl extends Declaration {
 
 	@Override
 	void check(DeclList curDecls) {
+		visible = true;
 		Declaration cur = curDecls.firstDecl;
 		if(isArray)
 			type = new ArrayType(Types.intType, numElems);
@@ -572,8 +605,7 @@ abstract class VarDecl extends Declaration {
 			type = typeSpec.type;
 		while(cur != null) {
 			if(cur == this) {
-				cur = cur.nextDecl;
-				continue;
+				return;
 			}
 			if(this.name.equals(cur.name))
 				Error.error(lineNum, "Name " + cur.name + " already declared!");
@@ -741,8 +773,12 @@ class FuncDecl extends Declaration {
 
 	@Override
 	void check(DeclList curDecls) {
-		if(!Declaration.checkName(curDecls, this))
-			Error.error(this.lineNum, " Function " + name + " already declared!");
+		if(!Declaration.checkName(curDecls, this)) {
+			if(curDecls.findDecl(name, this).visible)
+				Error.error(this.lineNum, " Function " + name + " already declared!");
+		}
+
+		visible = true;
 		
 		funcParams.check(curDecls);
 		lList.check(funcParams);
@@ -765,12 +801,14 @@ class FuncDecl extends Declaration {
 	
 	@Override
 	void checkWhetherFunction(int nParamsUsed, SyntaxUnit use) {
-		// ok!
+		if(nParamsUsed != funcParams.size()) {
+			use.error("Function " + name + " should have " + nParamsUsed + " parameters!");
+		}
 	}
 
 	@Override
 	void checkWhetherVariable(SyntaxUnit use) {
-		use.error(name + " Is not a variable!");
+		use.error(name + " is not a variable!");
 	}
 
 	@Override
@@ -790,12 +828,7 @@ class FuncDecl extends Declaration {
 		FuncDecl decl = new FuncDecl(Scanner.curName);
 		
 		decl.funcParams = ParamDeclList.parse();
-		
-		if(ts.type == Types.intType) {
-			decl.exitLabel = "int";
-		} else {
-			Error.expected("int");
-		}
+		decl.typeSpec = ts;
 		
 		Scanner.skip(Token.leftCurlToken);
 		
@@ -839,7 +872,7 @@ class Assignment extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		String lhsLabel = curFunc.getVarLabel(var.var.declRef);
+		//String lhsLabel = curFunc.getVarLabel(var.var.declRef);
 		var.var.genAddressCode(curFunc);
 		Code.genInstr("", "pushl", "%eax", "");
 		
@@ -1982,6 +2015,11 @@ class FunctionCall extends Operand {
 		Declaration d = curDecls.findDecl(name, this);
 		list.check(curDecls);
 		this.type = d.type;
+		if(d instanceof FuncDecl) {
+			FuncDecl fnc = (FuncDecl)d;
+			if(list.list.size() != fnc.funcParams.size())
+				this.error("Calls to " + name + " should have " + fnc.funcParams.size() + " param(s) not " + list.list.size());
+		}
 	}
 
 	@Override
@@ -2066,7 +2104,8 @@ class Variable extends Operand {
 		Declaration d = curDecls.findDecl(varName, this);
 		d.checkWhetherVariable(this);
 		declRef = (VarDecl) d;
-		
+		if(!d.visible)
+			this.error("Name " + varName + " is unknown!");
 		type = declRef.type;
 
 		if (index == null) {
@@ -2135,6 +2174,8 @@ class Variable extends Operand {
 		Variable var = new Variable();
 		var.varName = Scanner.curName;
 		
+		
+		
 		Scanner.skip(Token.nameToken);
 		
 		if(Scanner.curToken == Token.leftBracketToken) {
@@ -2144,6 +2185,8 @@ class Variable extends Operand {
 		}
 		
 		Log.leaveParser("</variable>");
+		
+		
 		
 		return var;
 	}

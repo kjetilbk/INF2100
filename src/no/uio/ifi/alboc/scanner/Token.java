@@ -2,7 +2,6 @@ package no.uio.ifi.alboc.scanner;
 
 import no.uio.ifi.alboc.chargenerator.CharGenerator;
 import no.uio.ifi.alboc.error.Error;
-import no.uio.ifi.alboc.log.Log;
 
 /*
  * class Token

@@ -10,7 +10,6 @@ import no.uio.ifi.alboc.alboc.AlboC;
 import no.uio.ifi.alboc.error.Error;
 import no.uio.ifi.alboc.scanner.Scanner;
 import no.uio.ifi.alboc.scanner.Token;
-import static no.uio.ifi.alboc.scanner.Token.*;
 import no.uio.ifi.alboc.types.*;
 
 /*

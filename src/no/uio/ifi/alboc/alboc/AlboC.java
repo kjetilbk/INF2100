@@ -151,7 +151,7 @@ public class AlboC {
 			arg[2] = "-c";
 			arg[3] = sName;
 		} else {
-			arg = new String[8];
+			arg = new String[9];
 			arg[0] = "gcc";
 			arg[1] = "-m32";
 			arg[2] = "-o";
@@ -160,6 +160,7 @@ public class AlboC {
 			arg[5] = "-L.";
 			arg[6] = "-L/hom/inf2100";
 			arg[7] = "-lalboc";
+			arg[8] = "-lstdlibalboc";
 		}
 		System.out.print("Running");
 		for (String s : arg)

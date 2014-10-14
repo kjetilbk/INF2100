@@ -1,18 +1,6 @@
-int kjetil(int a, int *b) {
-	return (a + *b);
-}
-
-int vetle(int a, int asdffdh) {
-	return kjetil(a, &asdffdh);
-}
-
 int main() {
-	int e;
-	e = vetle(1, 2);
-	if(e > 0) {
-		e = vetle(3, 4);
-	}
-	putint(e); putchar(10);
-	exit(0);
+	int *str;
+	str = get_str();
+	putchar(10);
+	put_str(str);
 }
-

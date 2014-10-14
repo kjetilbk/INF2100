@@ -13,7 +13,7 @@ int my_gets (int *s)
 {
    int i;  int c;
 
-   i = c;
+   i = 0;
    while (true) {
       c = getchar();
       if (c == LF) {
