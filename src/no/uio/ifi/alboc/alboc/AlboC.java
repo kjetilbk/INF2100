@@ -17,6 +17,7 @@ import static no.uio.ifi.alboc.scanner.Token.*;
 import no.uio.ifi.alboc.syntax.Syntax;
 import no.uio.ifi.alboc.types.Types;
 
+
 /*
  * The main program of the AlboC compiler.
  */
@@ -75,7 +76,7 @@ public class AlboC {
 	 */
 	public static void main(String[] args) {
 		int exitStatus = 0;
-
+		
 		if (checkParams(args) && sourceName != null) {
 			System.out.println("This is the AlboC compiler (version " + version
 					+ " on " + myOS + ")");

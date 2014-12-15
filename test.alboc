@@ -1,6 +1,0 @@
-int main() {
-	int *str;
-	str = get_str();
-	putchar(10);
-	put_str(str);
-}

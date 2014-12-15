@@ -56,6 +56,7 @@ public class Syntax {
 			dt.numStars = 0;
 			dt.check(null);
 			pd.typeSpec = dt;
+			pd.type = dt.type;
 			pd.isArray = false;
 			fd.funcParams.addDecl(pd);
 		}
@@ -410,7 +411,7 @@ class ParamDeclList extends DeclList {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		System.err.println(this.toString() + " FIKS ME");
+		// Ok
 	}
 	
 	static ParamDeclList parse() {
@@ -472,7 +473,7 @@ class DeclType extends SyntaxUnit {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		System.err.println(this.toString() + " FIKS ME");
+		// Ok :|
 	}
 
 	static DeclType parse() {
@@ -603,7 +604,7 @@ abstract class VarDecl extends Declaration {
 		visible = true;
 		Declaration cur = curDecls.firstDecl;
 		if(isArray)
-			type = new ArrayType(Types.intType, numElems);
+			type = new ArrayType(typeSpec.type, numElems);
 		else
 			type = typeSpec.type;
 		while(cur != null) {
@@ -686,7 +687,7 @@ class LocalVarDecl extends VarDecl {
 
 	@Override
 	void genCode(FuncDecl curFunc) {
-		System.err.println(this.toString() + " FIKS ME");
+		// Ok
 	}
 
 	static LocalVarDecl parse(DeclType dt) {
@@ -776,6 +777,8 @@ class FuncDecl extends Declaration {
 
 	@Override
 	void check(DeclList curDecls) {
+		type = typeSpec.type;
+		
 		if(!Declaration.checkName(curDecls, this)) {
 			if(curDecls.findDecl(name, this).visible)
 				Error.error(this.lineNum, " Function " + name + " already declared!");
@@ -786,6 +789,13 @@ class FuncDecl extends Declaration {
 		funcParams.check(curDecls);
 		lList.check(funcParams);
 		sList.check(lList);
+		
+		for(Statement s = sList.firstStatm;s != null; s = s.nextStatm) {
+			if(s instanceof ReturnStatm) {
+				if( ((ReturnStatm) s).expr.type != type)
+					Error.error(s.lineNum, "Return value with wrong type");
+			}
+		}
 	}
 
 	String getVarLabel(Declaration d) {
@@ -869,10 +879,13 @@ class Assignment extends SyntaxUnit {
 	Expression expr = null;
 	@Override
 	void check(DeclList curDecls) {
-		if(var.type != expr.type)
-			Error.error(lineNum, "Type mismatch");
 		var.check(curDecls);
 		expr.check(curDecls);
+		
+		System.err.println(var.var.varName + ": " + var.type + ", " + expr.type);
+		
+		if(!(var.type instanceof ValueType && (var.type.isSameType(expr.type) || expr.type == Types.intType)))
+			Error.error(lineNum, "Assignment type mismatch");
 	}
 
 	@Override
@@ -1129,6 +1142,8 @@ class ForStatm extends Statement {
 		
 		Expression cond = null;
 		
+		int lineNum;
+		
 		static ForControl parse() {
 			
 			ForControl fc = new ForControl();
@@ -1155,6 +1170,8 @@ class ForStatm extends Statement {
 			init.check(curDecls);
 			incdec.check(curDecls);
 			cond.check(curDecls);
+			if(cond.type instanceof ArrayType)
+				Error.error("Line statisk klassehelvete: For condition cannot be of array type");
 		}
 	}
 	
@@ -1250,7 +1267,8 @@ class IfStatm extends Statement {
 		list.check(curDecls);
 		if(elsep != null)
 			elsep.check(curDecls);
-		
+		if(test.type instanceof ArrayType)
+			Error.error(lineNum, "If-test can not be of array-type");
 	}
 
 	@Override
@@ -1344,7 +1362,6 @@ class ReturnStatm extends Statement {
 	@Override
 	void check(DeclList curDecls) {
 		expr.check(curDecls);
-		
 	}
 
 	@Override
@@ -1555,26 +1572,27 @@ class Expression extends SyntaxUnit {
 	@Override
 	void check(DeclList curDecls) {
 		firstTerm.check(curDecls);
+		type = firstTerm.getType();
+		
 		if(relOpr != null) {
+			secondTerm.check(curDecls);
+			relOpr.check(curDecls);
+			
 			// Sjekker krav 1 i tabell 6.3
-			if((relOpr.oprToken == Token.equalToken || relOpr.oprToken == Token.notEqualToken)
-					&& !(firstTerm.getType() == secondTerm.getType()
-					|| firstTerm.getType() == Types.intType
-					|| secondTerm.getType() == Types.intType)) {
-				Error.error(lineNum, "Type mismatch for rel operator");
-
+			if(relOpr.oprToken == Token.equalToken || relOpr.oprToken == Token.notEqualToken) {
+				if(!(firstTerm.getType() instanceof ValueType && secondTerm.getType() instanceof ValueType
+						&& (firstTerm.getType().isSameType(secondTerm.getType())
+						|| firstTerm.getType() == Types.intType
+						|| secondTerm.getType() == Types.intType)))
+					Error.error(lineNum, "Type mismatch for rel operator");
 			// Sjekker krav 2 i tabell 6.3
-			} else if (!(relOpr.oprToken == Token.equalToken || relOpr.oprToken == Token.notEqualToken)
-					&& !(firstTerm.getType() == Types.intType
+			} else if (!(firstTerm.getType() == Types.intType
 					&& secondTerm.getType() == Types.intType)) {
 				Error.error(lineNum, "Type mismatch for rel operator");
 			}
 			type = Types.intType;
-			secondTerm.check(curDecls);
-			relOpr.check(curDecls);
 		}
 		
-		type = firstTerm.getType();
 		
 		if(nextExpr != null)
 			nextExpr.check(curDecls);
@@ -1783,7 +1801,7 @@ class Primary extends SyntaxUnit {
 
 	Type getType() {
 		if(prefix == Token.starToken)
-			return new PointerType(op.type);
+			return op.type.getElemType();
 		return op.type;
 	}
 	
@@ -1792,11 +1810,11 @@ class Primary extends SyntaxUnit {
 	
 	@Override
 	void check(DeclList curDecls) {
+		op.check(curDecls);
 		if(prefix == Token.starToken && !(op.type instanceof PointerType))
 			Error.error(lineNum, "Can't dereference non-pointer type");
 		else if (prefix == Token.subtractToken && !(op.type == Types.intType))
 			Error.error(lineNum, "Can't negate non-int type");
-		op.check(curDecls);
 	}
 
 	@Override
@@ -2046,12 +2064,14 @@ class FunctionCall extends Operand {
 				this.error("Calls to " + name + " should have " + fnc.funcParams.size() + " param(s) not " + list.list.size());
 			
 			GenericIt<Expression> callIt = list.list.iterator();
-			ParamDecl curFormalParam = (ParamDecl) fnc.funcParams.firstDecl;
+			Declaration curFormalParam = fnc.funcParams.firstDecl;
 			while(callIt.hasNext()) {
 				Expression curExpr = callIt.next();
-				if(!(curFormalParam.type == curExpr.type || curExpr.type == Types.intType)) {
+				if(!(curFormalParam.type.isSameType(curExpr.type) || curExpr.type == Types.intType)) {
 					Error.error(lineNum, "Parameter must be same type as the formal parameter");
 				}
+				if(curFormalParam != null)
+					curFormalParam = curFormalParam.nextDecl;
 			}
 		}
 	}
