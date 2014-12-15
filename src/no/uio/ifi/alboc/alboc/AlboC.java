@@ -21,7 +21,7 @@ import no.uio.ifi.alboc.types.Types;
  * The main program of the AlboC compiler.
  */
 public class AlboC {
-	public static final String version = "2014-09-18 VETLE OG KJETIL SUPERKOMPILATOR :)))";
+	public static final String version = "2014-12-15 versjon 1.1 VETLE OG KJETIL SUPERDUPERKOMPILATOr :)))";
 	
 	
 	public static String sourceName = null, // Source file name
