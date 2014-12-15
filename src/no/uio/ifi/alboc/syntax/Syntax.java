@@ -882,8 +882,6 @@ class Assignment extends SyntaxUnit {
 		var.check(curDecls);
 		expr.check(curDecls);
 		
-		System.err.println(var.var.varName + ": " + var.type + ", " + expr.type);
-		
 		if(!(var.type instanceof ValueType && (var.type.isSameType(expr.type) || expr.type == Types.intType)))
 			Error.error(lineNum, "Assignment type mismatch");
 	}
