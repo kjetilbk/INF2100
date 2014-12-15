@@ -122,7 +122,15 @@ public class Log {
 	public static void noteBinding(String name, int lineNum, int useLineNum) {
 		if (!doLogBinding)
 			return;
-		// -- Must be changed in part 2:
+		String useLine = "line " + useLineNum;
+		if(useLineNum == -1)
+			useLine = "the library";
+		String printStr = name + " refers to declaration in " + useLine;
+		if(name.equals("main"))
+			printStr = "Binding: " + printStr;
+		else
+			printStr = "Binding: Line " + lineNum + ": " + printStr;
+		writeLogLine(printStr);
 	}
 
 	public static void noteTypeCheck(String what, Type t, String s, int lineNum) {

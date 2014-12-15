@@ -57,7 +57,7 @@ public class Syntax {
 			dt.check(null);
 			pd.typeSpec = dt;
 			pd.isArray = false;
-			fd.funcParams.addDecl(fd);
+			fd.funcParams.addDecl(pd);
 		}
 		
 		return fd;
@@ -71,10 +71,7 @@ public class Syntax {
 		library.addDecl(genFuncDecl("int putint(int char)"));
 		library.addDecl(genFuncDecl("int getchar()"));
 		library.addDecl(genFuncDecl("int getint()"));
-		library.addDecl(genFuncDecl("int exit(int code)"));
-		library.addDecl(genFuncDecl("int str_len(int* str)"));
-		library.addDecl(genFuncDecl("int put_str(int* str)"));
-		library.addDecl(genFuncDecl("int* get_str()"));
+		library.addDecl(genFuncDecl("int exit(int status)"));
 	}
 
 	public static void finish() {
@@ -334,8 +331,13 @@ abstract class DeclList extends SyntaxUnit {
 		DeclList curList = this;
 		while(curList != null) {
 			for(Declaration decl = curList.firstDecl; decl != null; decl = decl.nextDecl)
-				if(decl.name.equals(name))
+				if(decl.name.equals(name)) {
+					int declLine = decl.lineNum;
+					if(curList.outerScope == null) //If outerscope is null we are inside the library declarations
+						declLine = -1;
+					Log.noteBinding(name, use.lineNum, declLine);
 					return decl;
+				}
 			curList = curList.outerScope;
 		}
 		use.error("Could not find declaration " + name + "!");
@@ -427,6 +429,7 @@ class ParamDeclList extends DeclList {
 			ParamDecl pd = ParamDecl.parse(dt);
 			
 			pd.typeSpec = dt;
+			pd.type = dt.type;
 			
 			list.addDecl(pd);
 			
@@ -866,6 +869,8 @@ class Assignment extends SyntaxUnit {
 	Expression expr = null;
 	@Override
 	void check(DeclList curDecls) {
+		if(var.type != expr.type)
+			Error.error(lineNum, "Type mismatch");
 		var.check(curDecls);
 		expr.check(curDecls);
 	}
@@ -873,7 +878,7 @@ class Assignment extends SyntaxUnit {
 	@Override
 	void genCode(FuncDecl curFunc) {
 		//String lhsLabel = curFunc.getVarLabel(var.var.declRef);
-		var.var.genAddressCode(curFunc);
+		var.genCode(curFunc);
 		Code.genInstr("", "pushl", "%eax", "");
 		
 		expr.genCode(curFunc);
@@ -1453,7 +1458,9 @@ class LhsVariable extends SyntaxUnit {
 		LhsVariable lhs = new LhsVariable();
 		while (Scanner.curToken == starToken) {
 			++lhs.numStars;
+			Log.enterParser("<star>");
 			Scanner.skip(starToken);
+			Log.leaveParser("<star>");
 		}
 		Scanner.check(nameToken);
 		lhs.var = Variable.parse();
@@ -1549,6 +1556,20 @@ class Expression extends SyntaxUnit {
 	void check(DeclList curDecls) {
 		firstTerm.check(curDecls);
 		if(relOpr != null) {
+			// Sjekker krav 1 i tabell 6.3
+			if((relOpr.oprToken == Token.equalToken || relOpr.oprToken == Token.notEqualToken)
+					&& !(firstTerm.getType() == secondTerm.getType()
+					|| firstTerm.getType() == Types.intType
+					|| secondTerm.getType() == Types.intType)) {
+				Error.error(lineNum, "Type mismatch for rel operator");
+
+			// Sjekker krav 2 i tabell 6.3
+			} else if (!(relOpr.oprToken == Token.equalToken || relOpr.oprToken == Token.notEqualToken)
+					&& !(firstTerm.getType() == Types.intType
+					&& secondTerm.getType() == Types.intType)) {
+				Error.error(lineNum, "Type mismatch for rel operator");
+			}
+			type = Types.intType;
 			secondTerm.check(curDecls);
 			relOpr.check(curDecls);
 		}
@@ -1608,19 +1629,16 @@ class Term extends SyntaxUnit {
 	void check(DeclList curDecls) {
 		GenericIt<Pair<Factor, TermOpr>> it = list.iterator();
 		
-		Type checkType = null;
-		
 		while(it.hasNext()) {
 			Pair<Factor, TermOpr> p = it.next();
 			
 			p.first.check(curDecls);
-			if(checkType == null)
-				checkType = p.first.getType();
-			else
-				if(p.first.getType() != checkType);
 			
 			if(p.second != null)
 				p.second.check(curDecls);
+			
+			if(list.size() > 1 && p.first.getType() != Types.intType)
+				Error.error(lineNum, "Terms must be of int type");
 		}
 	}
 
@@ -1686,7 +1704,7 @@ class Factor extends SyntaxUnit {
 		return null;
 	}
 	
-    private GenericList<Pair<Primary, FacOpr>> list = new GenericList<Pair<Primary, FacOpr>>();
+    public GenericList<Pair<Primary, FacOpr>> list = new GenericList<Pair<Primary, FacOpr>>();
 	
 	@Override
 	void check(DeclList curDecls) {
@@ -1697,6 +1715,9 @@ class Factor extends SyntaxUnit {
 			p.first.check(curDecls);
 			if(p.second != null)
 				p.second.check(curDecls);
+
+			if(list.size() > 1 && p.first.getType() != Types.intType)
+				Error.error(lineNum, "Factors must be of int type");
 		}
 	}
 
@@ -1771,6 +1792,10 @@ class Primary extends SyntaxUnit {
 	
 	@Override
 	void check(DeclList curDecls) {
+		if(prefix == Token.starToken && !(op.type instanceof PointerType))
+			Error.error(lineNum, "Can't dereference non-pointer type");
+		else if (prefix == Token.subtractToken && !(op.type == Types.intType))
+			Error.error(lineNum, "Can't negate non-int type");
 		op.check(curDecls);
 	}
 
@@ -2019,6 +2044,15 @@ class FunctionCall extends Operand {
 			FuncDecl fnc = (FuncDecl)d;
 			if(list.list.size() != fnc.funcParams.size())
 				this.error("Calls to " + name + " should have " + fnc.funcParams.size() + " param(s) not " + list.list.size());
+			
+			GenericIt<Expression> callIt = list.list.iterator();
+			ParamDecl curFormalParam = (ParamDecl) fnc.funcParams.firstDecl;
+			while(callIt.hasNext()) {
+				Expression curExpr = callIt.next();
+				if(!(curFormalParam.type == curExpr.type || curExpr.type == Types.intType)) {
+					Error.error(lineNum, "Parameter must be same type as the formal parameter");
+				}
+			}
 		}
 	}
 
@@ -2062,7 +2096,7 @@ class Number extends Operand {
 
 	@Override
 	void check(DeclList curDecls) {
-		//ok
+		type = Types.intType;
 	}
 
 	@Override
@@ -2108,9 +2142,7 @@ class Variable extends Operand {
 			this.error("Name " + varName + " is unknown!");
 		type = declRef.type;
 
-		if (index == null) {
-			type = d.type;
-		} else {
+		if(index != null) {
 			index.check(curDecls);
 			Log.noteTypeCheck("a[e]", d.type, "a", index.type, "e", lineNum);
 
@@ -2124,6 +2156,8 @@ class Variable extends Operand {
 			} else {
 				error("Only arrays and pointers may be indexed.");
 			}
+			
+			type = type.getElemType();
 		}
 	}
 
@@ -2174,8 +2208,6 @@ class Variable extends Operand {
 		Variable var = new Variable();
 		var.varName = Scanner.curName;
 		
-		
-		
 		Scanner.skip(Token.nameToken);
 		
 		if(Scanner.curToken == Token.leftBracketToken) {
@@ -2210,8 +2242,10 @@ class Address extends Operand {
 	void check(DeclList curDecls) {
 		var.check(curDecls);
 		type = new PointerType(var.type);
+		
+		// Vi sjekker ikke typen til var da resultatet blir satt riktig i var.
 	}
-
+	
 	@Override
 	void genCode(FuncDecl curFunc) {
 		var.genAddressCode(curFunc);
